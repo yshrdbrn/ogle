@@ -1,11 +1,11 @@
 import re
-from ogle.lexer.lexer import *
+from ogle.lexer.lexer import Lexer
 
 
 def main():
-    input_text = 'hello world\n\ninteger a = 5;'
-    lexer = Lexer(input_text)
-    print(lexer.all_tokens())
+    lexer = Lexer("hello world")
+    tokens = lexer.all_tokens()
+    print(tokens)
 
 
 if __name__ == '__main__':

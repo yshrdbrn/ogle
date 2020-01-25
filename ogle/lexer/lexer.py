@@ -9,9 +9,10 @@ class LexToken(object):
         self.line_number = line_number
 
     def __str__(self):
-        return 'LexToken(%s, %r, %d)' % (self.type, self.value, self.line_number)
+        return 'LexToken({0}, {1}, {2})'.format(self.type, self.value, self.line_number)
 
     def __repr__(self):
+        # return str(self)
         return str(self)
 
 
