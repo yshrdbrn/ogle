@@ -1,0 +1,72 @@
+[
+  {
+    "type": "ID",
+    "value": "hello2",
+    "line_number": 2
+  },
+  {
+    "type": "ID",
+    "value": "abc_12",
+    "line_number": 2
+  },
+  {
+    "type": "ID",
+    "value": "a___b",
+    "line_number": 2
+  },
+
+
+  {
+    "type": "ERROR",
+    "value": "_qwerty",
+    "line_number": 5
+  },
+  {
+    "type": "INTEGER",
+    "value": "1",
+    "line_number": 5
+  },
+  {
+    "type": "ID",
+    "value": "abc",
+    "line_number": 5
+  },
+
+
+  {
+    "type": "ID",
+    "value": "abc123",
+    "line_number": 8
+  },
+  {
+    "type": "ERROR",
+    "value": "_hello.",
+    "line_number": 8
+  },
+  {
+    "type": "ID",
+    "value": "CorrectToken",
+    "line_number": 8
+  },
+
+  {
+    "type": "INTEGER",
+    "value": "integer",
+    "line_number": 11
+  },
+  {
+    "type": "ID",
+    "value": "Integer",
+    "line_number": 11
+  },
+  {
+    "type": "WHILE",
+    "value": "while",
+    "line_number": 11
+  },
+  {
+    "type": "ID",
+    "value": "WHILE",
+    "line_number": 11
+  }
+]
