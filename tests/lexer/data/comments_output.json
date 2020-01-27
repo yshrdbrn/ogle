@@ -1,0 +1,12 @@
+[
+  {
+    "type": "ID",
+    "value": "randomToken",
+    "line_number": 1
+  },
+  {
+    "type": "ID",
+    "value": "anotherToken",
+    "line_number": 10
+  }
+]

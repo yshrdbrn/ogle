@@ -3,7 +3,7 @@ from ogle.lexer.lexer import Lexer
 
 
 def main():
-    lexer = Lexer("hello world")
+    lexer = Lexer("5..5E5")
     tokens = lexer.all_tokens()
     print(tokens)
 

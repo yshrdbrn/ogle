@@ -1,0 +1,5 @@
+// Single character operators
+< > + - * / = ( ) { } [ ] ; , . :
+
+// Multi character operators
+==  <=  >=  <>  ::

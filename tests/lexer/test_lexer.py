@@ -4,10 +4,18 @@ import pathlib
 from ogle.lexer.lexer import *
 
 
-def test_id():
+@pytest.mark.parametrize("file_name", [
+    'comments',
+    'float',
+    'integer',
+    'id',
+    'operators',
+    'reserved_words'
+])
+def test_lexer(file_name):
     file_path = pathlib.Path(__file__).parent.absolute()
-    with file_path.joinpath('data').joinpath('id_input.in').open('r') as input_file, \
-            file_path.joinpath('data').joinpath('id_output.json').open('r') as output_file:
+    with file_path.joinpath('data').joinpath(file_name + '_input.in').open('r') as input_file, \
+            file_path.joinpath('data').joinpath(file_name + '_output.json').open('r') as output_file:
         input_text = input_file.read()
         lexer = Lexer(input_text)
 

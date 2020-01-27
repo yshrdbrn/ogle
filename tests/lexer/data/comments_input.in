@@ -1,0 +1,10 @@
+randomToken
+// inline comment
+
+/* single line comment */
+
+/*  multi
+    line
+    comment
+*/
+anotherToken

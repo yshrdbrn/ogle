@@ -1,7 +1,7 @@
 tokens = {
     'ID': r'[A-Za-z][A-Za-z_0-9]*',
     'FLOAT': r'(([0-9]+\.[0-9]*|[0-9]*\.[0-9]+)([Ee][+-]?[0-9]+)?|[0-9]+[Ee][+-]?[0-9]+)',
-    'INTEGER': r'[1-9][0-9]*',
+    'INTEGER': r'[0-9]+',
 
     # Multi-character operators
     '==': r'==',

@@ -1,0 +1,114 @@
+[
+  {
+    "type": "<",
+    "value": "<",
+    "line_number": 2
+  },
+  {
+    "type": ">",
+    "value": ">",
+    "line_number": 2
+  },
+  {
+    "type": "+",
+    "value": "+",
+    "line_number": 2
+  },
+  {
+    "type": "-",
+    "value": "-",
+    "line_number": 2
+  },
+  {
+    "type": "*",
+    "value": "*",
+    "line_number": 2
+  },
+  {
+    "type": "/",
+    "value": "/",
+    "line_number": 2
+  },
+  {
+    "type": "=",
+    "value": "=",
+    "line_number": 2
+  },
+  {
+    "type": "(",
+    "value": "(",
+    "line_number": 2
+  },
+  {
+    "type": ")",
+    "value": ")",
+    "line_number": 2
+  },
+  {
+    "type": "{",
+    "value": "{",
+    "line_number": 2
+  },
+  {
+    "type": "}",
+    "value": "}",
+    "line_number": 2
+  },
+  {
+    "type": "[",
+    "value": "[",
+    "line_number": 2
+  },
+  {
+    "type": "]",
+    "value": "]",
+    "line_number": 2
+  },
+  {
+    "type": ";",
+    "value": ";",
+    "line_number": 2
+  },
+  {
+    "type": ",",
+    "value": ",",
+    "line_number": 2
+  },
+  {
+    "type": ".",
+    "value": ".",
+    "line_number": 2
+  },
+  {
+    "type": ":",
+    "value": ":",
+    "line_number": 2
+  },
+
+
+  {
+    "type": "==",
+    "value": "==",
+    "line_number": 5
+  },
+  {
+    "type": "<=",
+    "value": "<=",
+    "line_number": 5
+  },
+  {
+    "type": ">=",
+    "value": ">=",
+    "line_number": 5
+  },
+  {
+    "type": "<>",
+    "value": "<>",
+    "line_number": 5
+  },
+  {
+    "type": "::",
+    "value": "::",
+    "line_number": 5
+  }
+]
