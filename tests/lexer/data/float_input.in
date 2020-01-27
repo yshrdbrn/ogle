@@ -1,0 +1,10 @@
+// Valid numbers
+1.23        01.23       01.     .5
+1.5e10      1.5e010     1.5E1
+1.5e+1      1.5E-1
+15e-5
+
+/* Invalid Numbers */
+
+// These numbers will be counted as two tokens
+1.0e5.0     5..5E5

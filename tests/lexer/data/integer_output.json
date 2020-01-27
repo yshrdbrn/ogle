@@ -1,0 +1,32 @@
+[
+  {
+    "type": "INTEGER",
+    "value": "123",
+    "line_number": 1
+  },
+  {
+    "type": "INTEGER",
+    "value": "0123",
+    "line_number": 2
+  },
+  {
+    "type": "INTEGER",
+    "value": "000123",
+    "line_number": 3
+  },
+  {
+    "type": "INTEGER",
+    "value": "12300",
+    "line_number": 4
+  },
+  {
+    "type": "INTEGER",
+    "value": "0000",
+    "line_number": 5
+  },
+  {
+    "type": "INTEGER",
+    "value": "0",
+    "line_number": 6
+  }
+]

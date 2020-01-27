@@ -1,0 +1,102 @@
+[
+  {
+    "type": "IF",
+    "value": "if",
+    "line_number": 1
+  },
+  {
+    "type": "THEN",
+    "value": "then",
+    "line_number": 2
+  },
+  {
+    "type": "ELSE",
+    "value": "else",
+    "line_number": 3
+  },
+  {
+    "type": "WHILE",
+    "value": "while",
+    "line_number": 4
+  },
+  {
+    "type": "CLASS",
+    "value": "class",
+    "line_number": 5
+  },
+  {
+    "type": "INTEGER",
+    "value": "integer",
+    "line_number": 6
+  },
+  {
+    "type": "FLOAT",
+    "value": "float",
+    "line_number": 7
+  },
+  {
+    "type": "DO",
+    "value": "do",
+    "line_number": 8
+  },
+  {
+    "type": "END",
+    "value": "end",
+    "line_number": 9
+  },
+  {
+    "type": "PUBLIC",
+    "value": "public",
+    "line_number": 10
+  },
+  {
+    "type": "PRIVATE",
+    "value": "private",
+    "line_number": 11
+  },
+  {
+    "type": "OR",
+    "value": "or",
+    "line_number": 12
+  },
+  {
+    "type": "AND",
+    "value": "and",
+    "line_number": 13
+  },
+  {
+    "type": "NOT",
+    "value": "not",
+    "line_number": 14
+  },
+  {
+    "type": "READ",
+    "value": "read",
+    "line_number": 15
+  },
+  {
+    "type": "WRITE",
+    "value": "write",
+    "line_number": 16
+  },
+  {
+    "type": "RETURN",
+    "value": "return",
+    "line_number": 17
+  },
+  {
+    "type": "MAIN",
+    "value": "main",
+    "line_number": 18
+  },
+  {
+    "type": "INHERITS",
+    "value": "inherits",
+    "line_number": 19
+  },
+  {
+    "type": "LOCAL",
+    "value": "local",
+    "line_number": 20
+  }
+]
