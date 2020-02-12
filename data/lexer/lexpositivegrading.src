@@ -1,0 +1,40 @@
+==	+	(	if 	do 
+<>	-	)	then	end
+<	*	{	else	public
+>	/	}	while	private
+<=	=	[	class	or
+>=		]	integer	and
+;			float	not
+,			read	inherits
+.			write	local
+:			return	
+::			main	
+
+0
+1
+10
+12
+123
+12345
+	
+1.23	
+12.34	
+120.340e10	
+12345.6789e-123	
+
+abc 	
+abc1
+a1bc	
+abc_1abc	
+abc1_abc_1abc	
+
+/* this is a single line block comment */
+
+/* this is a 
+multiple line
+block comment 
+*/
+
+// this is an inline comment
+
+

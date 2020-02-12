@@ -118,5 +118,11 @@
     "value": "local",
     "line_number": 20,
     "line_position": 1
+  },
+  {
+    "type": "VOID",
+    "value": "void",
+    "line_number": 21,
+    "line_position": 1
   }
 ]

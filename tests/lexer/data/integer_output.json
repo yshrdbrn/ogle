@@ -1,36 +1,36 @@
 [
   {
-    "type": "INTEGER",
+    "type": "INTNUM",
     "value": "123",
     "line_number": 1,
     "line_position": 1
   },
   {
-    "type": "INTEGER",
+    "type": "INTNUM",
     "value": "0123",
     "line_number": 2,
     "line_position": 1
   },
   {
-    "type": "INTEGER",
+    "type": "INTNUM",
     "value": "000123",
     "line_number": 3,
     "line_position": 1
   },
   {
-    "type": "INTEGER",
+    "type": "INTNUM",
     "value": "12300",
     "line_number": 4,
     "line_position": 1
   },
   {
-    "type": "INTEGER",
+    "type": "INTNUM",
     "value": "0000",
     "line_number": 5,
     "line_position": 1
   },
   {
-    "type": "INTEGER",
+    "type": "INTNUM",
     "value": "0",
     "line_number": 6,
     "line_position": 1

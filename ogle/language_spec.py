@@ -1,7 +1,7 @@
 tokens = {
     'ID': r'[A-Za-z][A-Za-z_0-9]*',
-    'FLOAT': r'(([0-9]+\.[0-9]*|[0-9]*\.[0-9]+)([Ee][+-]?[0-9]+)?|[0-9]+[Ee][+-]?[0-9]+)',
-    'INTEGER': r'[0-9]+',
+    'FLOATNUM': r'(([0-9]+\.[0-9]*|[0-9]*\.[0-9]+)([Ee][+-]?[0-9]+)?|[0-9]+[Ee][+-]?[0-9]+)',
+    'INTNUM': r'[0-9]+',
 
     # Multi-character operators
     '==': r'==',
@@ -33,7 +33,8 @@ reserved_keywords = {
     'return': 'RETURN',
     'main': 'MAIN',
     'inherits': 'INHERITS',
-    'local': 'LOCAL'
+    'local': 'LOCAL',
+    'void': 'VOID'
 }
 
 comments = r'(/\*(.|\n)*?\*/)|(//.*(\n[ \t]*//.*)*)'
