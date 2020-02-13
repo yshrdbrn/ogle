@@ -142,7 +142,7 @@ class Parser(object):
         else:
             self._lookahead = '$'
 
-        print(self._lookahead)
+        print(self._lookahead_lextoken)
 
     def parse(self):
         self._next_token()
@@ -223,7 +223,7 @@ bubbleSort(integer arr[], integer size) : void
           end;
         i = i+1;
       end;
-  end
+  end;
    
 /* Print the array */
 printArray(integer arr[], integer size) : void
@@ -238,7 +238,7 @@ printArray(integer arr[], integer size) : void
         write(arr[i]);
         i = i+1;
       end;
-  end 
+  end ;
 
 // main funtion to test above
 main  
