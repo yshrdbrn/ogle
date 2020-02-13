@@ -106,7 +106,7 @@ class Grammar(object):
         for occurrence_state_name, rule in self._all_occurrences(state.name):
             index = rule.index(state.name)
             nullable = True
-            for i in range(index+1, len(rule)):
+            for i in range(index + 1, len(rule)):
                 state.follow_set |= self.states[rule[i]].first_set - set('#')
                 if '#' not in self.states[rule[i]].first_set:
                     nullable = False
@@ -177,14 +177,13 @@ class Parser(object):
             result = self._parse_state(self._grammar.states[var])
             if not result:
                 print("EEERRRRORRRRRR => " + state.name + ' ' + var)
-                pass
         return True
 
     def _rule_can_produce_lookahead(self, rule):
         first_state_name = rule[0]
         first_state = self._grammar.states[first_state_name]
         return self._lookahead in first_state.first_set or \
-               (first_state.nullable() and self._lookahead in first_state.follow_set)
+            (first_state.nullable() and self._lookahead in first_state.follow_set)
 
 
 if __name__ == '__main__':
