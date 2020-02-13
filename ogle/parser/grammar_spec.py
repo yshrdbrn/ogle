@@ -32,3 +32,5 @@ terminals.update({
     'noteq': r'<>',
     'coloncolon': r'::',
 })
+
+tokens_to_terminals = {v: k for k, v in terminals.items()}
