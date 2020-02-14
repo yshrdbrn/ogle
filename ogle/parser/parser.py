@@ -25,6 +25,7 @@ class State(object):
 
 class Grammar(object):
     def __init__(self):
+        # Maps a state name (str) to a State object
         self.states = {}
         self.start_state = 'START'
         # Add all terminals to states
@@ -117,7 +118,7 @@ class Grammar(object):
                     self._internal_follow_set(occurrence_state)
                 state.follow_set |= occurrence_state.follow_set
 
-    # Returns all the rules that have the given 'name' inside
+    # Returns all the rules that have the given 'name' in their rhs
     # in the format of (lhs, rule)
     def _all_occurrences(self, name):
         occurrences = []
@@ -136,7 +137,7 @@ class Parser(object):
         self._grammar = Grammar()
 
     def _next_token(self):
-        self._lookahead_lextoken = lexer.next_token()
+        self._lookahead_lextoken = self._lexer.next_token()
         if self._lookahead_lextoken:
             self._lookahead = tokens_to_terminals[self._lookahead_lextoken.type]
         else:
@@ -184,78 +185,3 @@ class Parser(object):
         first_state = self._grammar.states[first_state_name]
         return self._lookahead in first_state.first_set or \
             (first_state.nullable() and self._lookahead in first_state.follow_set)
-
-
-if __name__ == '__main__':
-    # x = Grammar()
-    # for state_name, state_obj in x.states.items():
-    #     print('{0} => {1}'.format(state_name, state_obj.first_set))
-    # # print(x.states['PROGRAM'].first_set)
-    sample_input = '''
-    /* sort the array */
-bubbleSort(integer arr[], integer size) : void
-  local
-    integer n;
-    integer i;
-    integer j;
-    integer temp; 
-  do
-    n = size;
-    i = 0;
-    j = 0;
-    temp = 0;
-    while (i < n-1)
-      do
-        while (j < n-i-1)
-          do
-            if (arr[j] > arr[j+1]) 
-              then
-                do
-                  // swap temp and arr[i]
-                  temp = arr[j];
-                  arr[j] = arr[j+1];
-                  arr[j+1] = temp;
-                end
-              else
-	        ;
-            j = j+1;
-          end;
-        i = i+1;
-      end;
-  end
-   
-/* Print the array */
-printArray(integer arr[], integer size) : void
-  local
-    integer n;
-    integer i; 
-  do
-    n = size;
-    i = 0; 
-    while (i<n)
-      do
-        write(arr[i]);
-        i = i+1;
-      end;
-  end
-
-// main funtion to test above
-main  
-  local
-    integer arr[7]; 
-  do
-    arr[0] = 64;
-    arr[1] = 34;
-    arr[2] = 25;
-    arr[3] = 12;
-    arr[4] = 22;
-    arr[5] = 11;
-    arr[6] = 90;
-    printarray(arr, 7); 
-    bubbleSort(arr, 7);
-    printarray(arr, 7); 
-  end
-    '''
-    lexer = Lexer(sample_input)
-    parser = Parser(lexer)
-    parser.parse()
