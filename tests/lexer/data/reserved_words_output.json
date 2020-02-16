@@ -2,101 +2,121 @@
   {
     "type": "IF",
     "value": "if",
-    "line_number": 1
+    "line_number": 1,
+    "line_position": 1
   },
   {
     "type": "THEN",
     "value": "then",
-    "line_number": 2
+    "line_number": 2,
+    "line_position": 1
   },
   {
     "type": "ELSE",
     "value": "else",
-    "line_number": 3
+    "line_number": 3,
+    "line_position": 1
   },
   {
     "type": "WHILE",
     "value": "while",
-    "line_number": 4
+    "line_number": 4,
+    "line_position": 1
   },
   {
     "type": "CLASS",
     "value": "class",
-    "line_number": 5
+    "line_number": 5,
+    "line_position": 1
   },
   {
     "type": "INTEGER",
     "value": "integer",
-    "line_number": 6
+    "line_number": 6,
+    "line_position": 1
   },
   {
     "type": "FLOAT",
     "value": "float",
-    "line_number": 7
+    "line_number": 7,
+    "line_position": 1
   },
   {
     "type": "DO",
     "value": "do",
-    "line_number": 8
+    "line_number": 8,
+    "line_position": 1
   },
   {
     "type": "END",
     "value": "end",
-    "line_number": 9
+    "line_number": 9,
+    "line_position": 1
   },
   {
     "type": "PUBLIC",
     "value": "public",
-    "line_number": 10
+    "line_number": 10,
+    "line_position": 1
   },
   {
     "type": "PRIVATE",
     "value": "private",
-    "line_number": 11
+    "line_number": 11,
+    "line_position": 1
   },
   {
     "type": "OR",
     "value": "or",
-    "line_number": 12
+    "line_number": 12,
+    "line_position": 1
   },
   {
     "type": "AND",
     "value": "and",
-    "line_number": 13
+    "line_number": 13,
+    "line_position": 1
   },
   {
     "type": "NOT",
     "value": "not",
-    "line_number": 14
+    "line_number": 14,
+    "line_position": 1
   },
   {
     "type": "READ",
     "value": "read",
-    "line_number": 15
+    "line_number": 15,
+    "line_position": 1
   },
   {
     "type": "WRITE",
     "value": "write",
-    "line_number": 16
+    "line_number": 16,
+    "line_position": 1
   },
   {
     "type": "RETURN",
     "value": "return",
-    "line_number": 17
+    "line_number": 17,
+    "line_position": 1
   },
   {
     "type": "MAIN",
     "value": "main",
-    "line_number": 18
+    "line_number": 18,
+    "line_position": 1
   },
   {
     "type": "INHERITS",
     "value": "inherits",
-    "line_number": 19
+    "line_number": 19,
+    "line_position": 1
   },
   {
     "type": "LOCAL",
     "value": "local",
-    "line_number": 20
+    "line_number": 20,
+    "line_position": 1
   }
 ]

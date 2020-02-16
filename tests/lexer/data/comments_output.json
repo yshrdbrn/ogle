@@ -2,11 +2,13 @@
   {
     "type": "ID",
     "value": "randomToken",
-    "line_number": 1
+    "line_number": 1,
+    "line_position": 1
   },
   {
     "type": "ID",
     "value": "anotherToken",
-    "line_number": 10
+    "line_number": 10,
+    "line_position": 1
   }
 ]

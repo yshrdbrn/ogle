@@ -2,113 +2,135 @@
   {
     "type": "<",
     "value": "<",
-    "line_number": 2
+    "line_number": 2,
+    "line_position": 1
   },
   {
     "type": ">",
     "value": ">",
-    "line_number": 2
+    "line_number": 2,
+    "line_position": 3
   },
   {
     "type": "+",
     "value": "+",
-    "line_number": 2
+    "line_number": 2,
+    "line_position": 5
   },
   {
     "type": "-",
     "value": "-",
-    "line_number": 2
+    "line_number": 2,
+    "line_position": 7
   },
   {
     "type": "*",
     "value": "*",
-    "line_number": 2
+    "line_number": 2,
+    "line_position": 9
   },
   {
     "type": "/",
     "value": "/",
-    "line_number": 2
+    "line_number": 2,
+    "line_position": 11
   },
   {
     "type": "=",
     "value": "=",
-    "line_number": 2
+    "line_number": 2,
+    "line_position": 13
   },
   {
     "type": "(",
     "value": "(",
-    "line_number": 2
+    "line_number": 2,
+    "line_position": 15
   },
   {
     "type": ")",
     "value": ")",
-    "line_number": 2
+    "line_number": 2,
+    "line_position": 17
   },
   {
     "type": "{",
     "value": "{",
-    "line_number": 2
+    "line_number": 2,
+    "line_position": 19
   },
   {
     "type": "}",
     "value": "}",
-    "line_number": 2
+    "line_number": 2,
+    "line_position": 21
   },
   {
     "type": "[",
     "value": "[",
-    "line_number": 2
+    "line_number": 2,
+    "line_position": 23
   },
   {
     "type": "]",
     "value": "]",
-    "line_number": 2
+    "line_number": 2,
+    "line_position": 25
   },
   {
     "type": ";",
     "value": ";",
-    "line_number": 2
+    "line_number": 2,
+    "line_position": 27
   },
   {
     "type": ",",
     "value": ",",
-    "line_number": 2
+    "line_number": 2,
+    "line_position": 29
   },
   {
     "type": ".",
     "value": ".",
-    "line_number": 2
+    "line_number": 2,
+    "line_position": 31
   },
   {
     "type": ":",
     "value": ":",
-    "line_number": 2
+    "line_number": 2,
+    "line_position": 33
   },
 
 
   {
     "type": "==",
     "value": "==",
-    "line_number": 5
+    "line_number": 5,
+    "line_position": 1
   },
   {
     "type": "<=",
     "value": "<=",
-    "line_number": 5
+    "line_number": 5,
+    "line_position": 5
   },
   {
     "type": ">=",
     "value": ">=",
-    "line_number": 5
+    "line_number": 5,
+    "line_position": 9
   },
   {
     "type": "<>",
     "value": "<>",
-    "line_number": 5
+    "line_number": 5,
+    "line_position": 13
   },
   {
     "type": "::",
     "value": "::",
-    "line_number": 5
+    "line_number": 5,
+    "line_position": 17
   }
 ]
