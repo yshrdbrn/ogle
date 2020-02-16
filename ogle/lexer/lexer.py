@@ -3,13 +3,14 @@ from ogle.language_spec import *
 
 
 class LexToken(object):
-    def __init__(self, token_type, value, line_number):
+    def __init__(self, token_type, value, line_number, line_position):
         self.type = token_type
         self.value = value
         self.line_number = line_number
+        self.line_position = line_position
 
     def __str__(self):
-        return 'LexToken({0}, {1}, {2})'.format(self.type, self.value, self.line_number)
+        return 'LexToken({0}, {1}, {2}, {3})'.format(self.type, self.value, self.line_number, self.line_position)
 
     def __repr__(self):
         # return str(self)
@@ -22,6 +23,7 @@ class Lexer(object):
         self.text_len = len(input_text)
         self.pointer_pos = 0
         self.line_number = 1
+        self.line_position = 1
         self.line_end = re.compile(line_end)
         self.comments = re.compile(comments)
 
@@ -34,6 +36,7 @@ class Lexer(object):
             # Skip any whitespace
             if self.text[self.pointer_pos] in whitespace:
                 self.pointer_pos += 1
+                self.line_position += 1
                 continue
 
             # Check for line end character
@@ -53,24 +56,30 @@ class Lexer(object):
                 match = regex.match(self.text, self.pointer_pos)
                 if match:
                     # Token found
-                    token_obj = LexToken(token, match.group(), self.line_number)
+                    token_obj = LexToken(token, match.group(), self.line_number, self.line_position)
                     # Check if the token is a reserved word
                     if token == 'ID' and token_obj.value in reserved_keywords.keys():
                         token_obj.type = reserved_keywords[token_obj.value]
                     self.pointer_pos = match.end()
+                    self.line_position += len(match.group())
                     return token_obj
 
             # No match found. Check for special character matches
             if self.text[self.pointer_pos] in special_characters:
-                token_obj = LexToken(self.text[self.pointer_pos], self.text[self.pointer_pos], self.line_number)
+                token_obj = LexToken(self.text[self.pointer_pos],
+                                     self.text[self.pointer_pos],
+                                     self.line_number,
+                                     self.line_position)
                 self.pointer_pos += 1
+                self.line_position += 1
                 return token_obj
 
             # Error found in the next token
             # Find all the non-space characters and take them as one token
             match = re.compile(r'\S*').match(self.text, self.pointer_pos)
-            token_obj = LexToken('ERROR', match.group(), self.line_number)
+            token_obj = LexToken('ERROR', match.group(), self.line_number, self.line_position)
             self.pointer_pos = match.end()
+            self.line_position += len(match.group())
             return token_obj
 
         # End of file reached
@@ -87,8 +96,10 @@ class Lexer(object):
 
     def _new_line_found(self, match):
         self.line_number += len(match.group())
+        self.line_position = 1
         self.pointer_pos = match.end()
 
     def _comments_found(self, match):
         self.line_number += match.group().count('\n')
+        self.line_position = 1
         self.pointer_pos = match.end()
