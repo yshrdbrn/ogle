@@ -1,11 +1,11 @@
 // Correct tokens
-hello2     abc_12       a___b
+hello2      abc_12      a___b
 
 // Incorrect tokens
 _qwerty     1abc
 
 // Mixed tokens in one line
-abc123      _hello.    CorrectToken
+abc123      _hello.     CorrectToken
 
 // Reserved keywords
 integer     Integer     while       WHILE

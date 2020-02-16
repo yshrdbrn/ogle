@@ -2,80 +2,94 @@
   {
     "type": "FLOAT",
     "value": "1.23",
-    "line_number": 2
+    "line_number": 2,
+    "line_position": 1
   },
   {
     "type": "FLOAT",
     "value": "01.23",
-    "line_number": 2
+    "line_number": 2,
+    "line_position": 13
   },
   {
     "type": "FLOAT",
     "value": "01.",
-    "line_number": 2
+    "line_number": 2,
+    "line_position": 25
   },
   {
     "type": "FLOAT",
     "value": ".5",
-    "line_number": 2
+    "line_number": 2,
+    "line_position": 33
   },
 
 
   {
     "type": "FLOAT",
     "value": "1.5e10",
-    "line_number": 3
+    "line_number": 3,
+    "line_position": 1
   },
   {
     "type": "FLOAT",
     "value": "1.5e010",
-    "line_number": 3
+    "line_number": 3,
+    "line_position": 13
   },
   {
     "type": "FLOAT",
     "value": "1.5E1",
-    "line_number": 3
+    "line_number": 3,
+    "line_position": 25
   },
 
 
   {
     "type": "FLOAT",
     "value": "1.5e+1",
-    "line_number": 4
+    "line_number": 4,
+    "line_position": 1
   },
   {
     "type": "FLOAT",
     "value": "1.5E-1",
-    "line_number": 4
+    "line_number": 4,
+    "line_position": 13
   },
 
 
   {
     "type": "FLOAT",
     "value": "15e-5",
-    "line_number": 5
+    "line_number": 5,
+    "line_position": 1
   },
 
 
   {
     "type": "FLOAT",
     "value": "1.0e5",
-    "line_number": 10
+    "line_number": 10,
+    "line_position": 1
   },
   {
     "type": "FLOAT",
     "value": ".0",
-    "line_number": 10
+    "line_number": 10,
+    "line_position": 6
   },
 
   {
     "type": "FLOAT",
     "value": "5.",
-    "line_number": 10
+    "line_number": 10,
+    "line_position": 13
   },
   {
     "type": "FLOAT",
     "value": ".5E5",
-    "line_number": 10
+    "line_number": 10,
+    "line_position": 15
   }
 ]
