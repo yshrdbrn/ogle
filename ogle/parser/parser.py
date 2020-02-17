@@ -1,6 +1,5 @@
 import os
 from ogle.parser.grammar_spec import terminals, tokens_to_terminals
-from ogle.lexer.lexer import Lexer, LexToken
 
 
 class State(object):
@@ -134,22 +133,34 @@ class Parser(object):
         self._lexer = lexer
         self._lookahead = None
         self._lookahead_lextoken = None
+        self._prev_lextoken = None
         self._grammar = Grammar()
+        self.errors = []
 
     def _next_token(self):
-        self._lookahead_lextoken = self._lexer.next_token()
+        # Check for a lexer error
+        while True:
+            self._prev_lextoken = self._lookahead_lextoken
+            self._lookahead_lextoken = self._lexer.next_token()
+            if self._lookahead_lextoken and self._lookahead_lextoken.type == 'ERROR':
+                self.errors.append(self._lookahead_lextoken.lexer_error_message())
+            else:
+                break
+        # Check for the end of the file
         if self._lookahead_lextoken:
             self._lookahead = tokens_to_terminals[self._lookahead_lextoken.type]
         else:
             self._lookahead = '$'
 
-        print(self._lookahead_lextoken)
-
     def parse(self):
         self._next_token()
         self._parse_state(self._grammar.states[self._grammar.start_state])
 
-    def _parse_state(self, state):
+    def _parse_state(self, state, panic_mode=False):
+        # If we reached the end of the file, finish the function
+        if panic_mode and self._lookahead == '$':
+            return True
+
         if state.is_terminal:
             if self._lookahead == state.name:
                 self._next_token()
@@ -159,7 +170,7 @@ class Parser(object):
 
         # Check if token is not parsable by this state
         if self._lookahead not in state.first_set:
-            if state.nullable() and self._lookahead in state.follow_set:
+            if (panic_mode or state.nullable()) and self._lookahead in state.follow_set:
                 return True
             else:
                 return False
@@ -175,9 +186,13 @@ class Parser(object):
 
         # Parse the production
         for var in production:
-            result = self._parse_state(self._grammar.states[var])
+            var_state = self._grammar.states[var]
+            result = self._parse_state(var_state)
             if not result:
-                print("EEERRRRORRRRRR => " + state.name + ' ' + var)
+                # Handle the parse error
+                self._handle_parse_error(var_state)
+                while not self._parse_state(var_state, panic_mode=True):
+                    self._next_token()
         return True
 
     def _rule_can_produce_lookahead(self, rule):
@@ -185,3 +200,18 @@ class Parser(object):
         first_state = self._grammar.states[first_state_name]
         return self._lookahead in first_state.first_set or \
             (first_state.nullable() and self._lookahead in first_state.follow_set)
+
+    def _handle_parse_error(self, var_state):
+        token = self._prev_lextoken
+        if token:
+            token.line_position += len(token.value) + 1
+        else:
+            token = self._lookahead_lextoken
+        error_message = 'Syntax error at location {}.'.format(token.location())
+        if '#' not in var_state.first_set:
+            first_set = var_state.first_set - set('#')
+            if len(first_set) == 1:
+                error_message += ' Expected the token: {}'.format(first_set.pop())
+            elif len(first_set) > 1:
+                error_message += ' Expected {}.'.format(var_state.name)
+        self.errors.append(error_message)

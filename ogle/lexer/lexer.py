@@ -16,6 +16,12 @@ class LexToken(object):
         # return str(self)
         return str(self)
 
+    def location(self):
+        return '{}:{}'.format(self.line_number, self.line_position)
+
+    def lexer_error_message(self):
+        return 'Unknown identifier at {}.'.format(self.location())
+
 
 class Lexer(object):
     def __init__(self, input_text):
@@ -36,7 +42,7 @@ class Lexer(object):
             # Skip any whitespace
             if self.text[self.pointer_pos] in whitespace:
                 self.pointer_pos += 1
-                self.line_position += 1
+                self.line_position += 4 if self.text[self.pointer_pos] == '\t' else 1
                 continue
 
             # Check for line end character
