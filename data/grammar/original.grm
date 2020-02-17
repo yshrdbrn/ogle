@@ -1,0 +1,165 @@
+<START> ::= <program> 
+
+<addOp> ::= '+' 
+<addOp> ::= '-' 
+<addOp> ::= 'or' 
+
+<arithExpression> ::= <term> <rightrec-arithExpression> 
+
+<arraySize> ::= '[' 'intNum' ']' 
+<arraySize> ::= '[' ']' 
+
+<assignStatement> ::= <variable> <assignmentOp> <expression> 
+
+<assignmentOp> ::= '=' 
+
+<classDeclaration> ::= 'class' 'id' <opt-classDeclaration2> '{' <rept-classDeclaration4> '}' ';' 
+
+<compareOp> ::= 'eq' 
+<compareOp> ::= 'notEq' 
+<compareOp> ::= 'less' 
+<compareOp> ::= 'greater' 
+<compareOp> ::= 'lessEq' 
+<compareOp> ::= 'greaterEq' 
+
+<expression> ::= <arithExpression> 
+<expression> ::= <relExpression> 
+
+<factor> ::= <variable> 
+<factor> ::= <functionCall> 
+<factor> ::= 'intNum' 
+<factor> ::= 'floatNum' 
+<factor> ::= '(' <arithExpression> ')' 
+<factor> ::= 'not' <factor> 
+<factor> ::= <sign> <factor> 
+
+<functionBody> ::= <opt-functionBody0> 'do' <rept-functionBody2> 'end' 
+
+<functionCall> ::= <rept-functionCall0> 'id' '(' <functionCallParams> ')' 
+
+<functionCallParams> ::= <expression> <rept-functionCallParams1> 
+<functionCallParams> ::= EPSILON 
+
+<functionCallParamsTail> ::= ',' <expression> 
+
+<functionDeclaration> ::= 'id' '(' <functionParams> ')' ':' <type> ';' 
+<functionDeclaration> ::= 'id' '(' <functionParams> ')' ':' 'void' ';' 
+
+<functionDefinition> ::= <functionSignature> <functionBody> ';' 
+
+<functionParams> ::= <type> 'id' <rept-functionParams2> <rept-functionParams3> 
+<functionParams> ::= EPSILON 
+
+<functionParamsTail> ::= ',' <type> 'id' <rept-functionParamsTail3> 
+
+<functionSignature> ::= <opt-functionSignature0> 'id' '(' <functionParams> ')' ':' <type> 
+<functionSignature> ::= <opt-functionSignature0> 'id' '(' <functionParams> ')' ':' 'void' 
+
+<idnest> ::= 'id' <rept-idnest1> '.' 
+<idnest> ::= 'id' '(' <functionCallParams> ')' '.' 
+
+<index> ::= '[' <arithExpression> ']' 
+
+<memberDeclaration> ::= <functionDeclaration> 
+<memberDeclaration> ::= <variableDeclaration> 
+
+<multOp> ::= '*' 
+<multOp> ::= '/' 
+<multOp> ::= 'and' 
+
+<opt-classDeclaration2> ::= 'inherits' 'id' <rept-opt-classDeclaration22> 
+<opt-classDeclaration2> ::= EPSILON 
+
+<opt-functionBody0> ::= 'local' <rept-opt-functionBody01> 
+<opt-functionBody0> ::= EPSILON 
+
+<opt-functionSignature0> ::= 'id' '::' 
+<opt-functionSignature0> ::= EPSILON 
+
+<program> ::= <rept-program0> <rept-program1> 'main' <functionBody> 
+
+<relExpression> ::= <arithExpression> <compareOp> <arithExpression> 
+
+<rept-classDeclaration4> ::= <visibility> <memberDeclaration> <rept-classDeclaration4> 
+<rept-classDeclaration4> ::= EPSILON 
+
+<rept-functionBody2> ::= <statement> <rept-functionBody2> 
+<rept-functionBody2> ::= EPSILON 
+
+<rept-functionCall0> ::= <idnest> <rept-functionCall0> 
+<rept-functionCall0> ::= EPSILON 
+
+<rept-functionCallParams1> ::= <functionCallParamsTail> <rept-functionCallParams1> 
+<rept-functionCallParams1> ::= EPSILON 
+
+<rept-functionParams2> ::= <arraySize> <rept-functionParams2> 
+<rept-functionParams2> ::= EPSILON 
+
+<rept-functionParams3> ::= <functionParamsTail> <rept-functionParams3> 
+<rept-functionParams3> ::= EPSILON 
+
+<rept-functionParamsTail3> ::= <arraySize> <rept-functionParamsTail3> 
+<rept-functionParamsTail3> ::= EPSILON 
+
+<rept-idnest1> ::= <index> <rept-idnest1> 
+<rept-idnest1> ::= EPSILON 
+
+<rept-opt-classDeclaration22> ::= ',' 'id' <rept-opt-classDeclaration22> 
+<rept-opt-classDeclaration22> ::= EPSILON 
+
+<rept-opt-functionBody01> ::= <variableDeclaration> <rept-opt-functionBody01> 
+<rept-opt-functionBody01> ::= EPSILON 
+
+<rept-program0> ::= <classDeclaration> <rept-program0> 
+<rept-program0> ::= EPSILON 
+
+<rept-program1> ::= <functionDefinition> <rept-program1> 
+<rept-program1> ::= EPSILON 
+
+<rept-statementBlock1> ::= <statement> <rept-statementBlock1> 
+<rept-statementBlock1> ::= EPSILON 
+
+<rept-variable0> ::= <idnest> <rept-variable0> 
+<rept-variable0> ::= EPSILON 
+
+<rept-variable2> ::= <index> <rept-variable2> 
+<rept-variable2> ::= EPSILON 
+
+<rept-variableDeclaration2> ::= <arraySize> <rept-variableDeclaration2> 
+<rept-variableDeclaration2> ::= EPSILON 
+
+<rightrec-arithExpression> ::= EPSILON 
+<rightrec-arithExpression> ::= <addOp> <term> <rightrec-arithExpression> 
+
+<rightrec-term> ::= EPSILON 
+<rightrec-term> ::= <multOp> <factor> <rightrec-term> 
+
+<sign> ::= '+' 
+<sign> ::= '-' 
+
+<statement> ::= <assignStatement> ';' 
+<statement> ::= 'if' '(' <relExpression> ')' 'then' <statementBlock> 'else' <statementBlock> ';' 
+<statement> ::= 'while' '(' <relExpression> ')' <statementBlock> ';' 
+<statement> ::= 'read' '(' <variable> ')' ';' 
+<statement> ::= 'write' '(' <expression> ')' ';' 
+<statement> ::= 'return' '(' <expression> ')' ';' 
+<statement> ::= <functionCall> ';' 
+
+<statementBlock> ::= 'do' <rept-statementBlock1> 'end' 
+<statementBlock> ::= <statement> 
+<statementBlock> ::= EPSILON 
+
+<term> ::= <factor> <rightrec-term> 
+
+<type> ::= 'integer' 
+<type> ::= 'float' 
+<type> ::= 'id' 
+
+<variable> ::= <rept-variable0> 'id' <rept-variable2> 
+
+<variableDeclaration> ::= <type> 'id' <rept-variableDeclaration2> ';' 
+
+<visibility> ::= 'public' 
+<visibility> ::= 'private' 
+
+
