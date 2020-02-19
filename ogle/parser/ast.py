@@ -70,19 +70,16 @@ class AST(object):
         self.root = None
         self.stack = deque()
         self.ignore_input = False
-        self.cnt = 0
 
     def make_node(self, name):
         if self.ignore_input:
             return
         self.stack.append(Node(name))
-        pass
 
     def perform_operation(self, operation, lhs_name):
         if self.ignore_input:
             return
 
-        self.cnt += 1
         operation_number = int(operation[1])
         if operation_number == 1:
             self.make_node(lhs_name if '(' not in operation else operation[3:-1])
@@ -102,8 +99,6 @@ class AST(object):
             self._delete_top()
         else:
             raise ValueError
-
-        print(lhs_name)
 
     def finish_building(self):
         self.root = self.stack[0]
