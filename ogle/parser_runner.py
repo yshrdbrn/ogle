@@ -1,6 +1,7 @@
 import argparse
 from ogle.lexer.lexer import Lexer
 from ogle.parser.parser import Parser
+from ogle.parser.ast import ASTVisualizer
 
 
 def main():
@@ -14,6 +15,7 @@ def main():
         lexer = Lexer(input_text)
         parser = Parser(lexer)
         parser.parse()
+        ASTVisualizer(parser.ast).visualize()
 
 
 if __name__ == '__main__':
