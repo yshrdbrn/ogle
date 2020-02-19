@@ -1,5 +1,10 @@
 import os
 from ogle.parser.grammar_spec import terminals, tokens_to_terminals
+from ogle.parser.ast import AST, terminal_nodes
+
+
+def is_semantic_action(input):
+    return '#' in input
 
 
 class State(object):
@@ -11,6 +16,7 @@ class State(object):
         # Flag to compute first and follow sets
         self.visited = False
         self.rhs = []
+        self.rhs_no_action = []
 
     def nullable(self):
         return '#' in self.first_set
@@ -54,6 +60,8 @@ class Grammar(object):
                 if lhs not in self.states:
                     self.states[lhs] = State(lhs)
                 self.states[lhs].rhs.append(rhs)
+                if type(rhs) is list:
+                    self.states[lhs].rhs_no_action.append([s for s in rhs if not is_semantic_action(s)])
 
     def _calculate_first_sets(self):
         for _, state in self.states.items():
@@ -73,9 +81,7 @@ class Grammar(object):
         if '#' in state.rhs:
             state.first_set.add('#')
         # Go through all productions of this state
-        for rule in state.rhs:
-            if rule == '#':
-                continue
+        for rule in state.rhs_no_action:
             nullable = True
             for symbol in rule:
                 symbol_state = self.states[symbol]
@@ -122,7 +128,7 @@ class Grammar(object):
     def _all_occurrences(self, name):
         occurrences = []
         for _, state in self.states.items():
-            for rule in state.rhs:
+            for rule in state.rhs_no_action:
                 if name in rule:
                     occurrences.append((state.name, rule))
         return occurrences
@@ -136,6 +142,7 @@ class Parser(object):
         self._prev_lextoken = None
         self._grammar = Grammar()
         self.errors = []
+        self.ast = AST()
 
     def _next_token(self):
         # Check for a lexer error
@@ -155,6 +162,8 @@ class Parser(object):
     def parse(self):
         self._next_token()
         self._parse_state(self._grammar.states[self._grammar.start_state])
+        self.ast.finish_building()
+        pass
 
     def _parse_state(self, state, panic_mode=False):
         # If we reached the end of the file, finish the function
@@ -163,6 +172,11 @@ class Parser(object):
 
         if state.is_terminal:
             if self._lookahead == state.name:
+                # Create AST node if should be created
+                if self._lookahead in terminal_nodes:
+                    # self.ast.make_node(self._lookahead_lextoken.value)
+                    self.ast.perform_operation('#1', self._lookahead_lextoken.value)
+
                 self._next_token()
                 return True
             else:
@@ -171,6 +185,9 @@ class Parser(object):
         # Check if token is not parsable by this state
         if self._lookahead not in state.first_set:
             if (panic_mode or state.nullable()) and self._lookahead in state.follow_set:
+                # Create an empty node in AST
+                # self.ast.make_node(state.name)
+                self.ast.perform_operation('#1', state.name)
                 return True
             else:
                 return False
@@ -186,6 +203,11 @@ class Parser(object):
 
         # Parse the production
         for var in production:
+            # Found a semantic action
+            if '#' in var:
+                self.ast.perform_operation(var, state.name)
+                continue
+
             var_state = self._grammar.states[var]
             result = self._parse_state(var_state)
             if not result:
@@ -196,12 +218,20 @@ class Parser(object):
         return True
 
     def _rule_can_produce_lookahead(self, rule):
-        first_state_name = rule[0]
+        first_state_name = None
+        for state_name in rule:
+            first_state_name = state_name
+            # it is not a semantic action
+            if '#' not in first_state_name:
+                break
         first_state = self._grammar.states[first_state_name]
         return self._lookahead in first_state.first_set or \
             (first_state.nullable() and self._lookahead in first_state.follow_set)
 
     def _handle_parse_error(self, var_state):
+        # Stop building the AST
+        self.ast.ignore_input = True
+
         token = self._prev_lextoken
         if token:
             token.line_position += len(token.value) + 1
