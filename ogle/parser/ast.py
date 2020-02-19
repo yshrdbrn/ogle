@@ -164,11 +164,11 @@ class ASTVisualizer(object):
         self.ast = ast
         self.dot = Digraph(name='AST', comment='Abstract Syntax Tree')
 
-    def visualize(self):
+    def visualize(self, input_file_name):
         root = self.ast.root
         self._add_nodes(root)
         self._add_edges(root)
-        self.dot.render()
+        self.dot.render(filename=input_file_name + '_AST.gv')
 
     def _add_nodes(self, root):
         self.dot.node(root.unique_id, root.name)
