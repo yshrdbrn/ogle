@@ -1,4 +1,5 @@
 from collections import deque
+from graphviz import Digraph
 
 
 terminal_nodes = [
@@ -40,9 +41,13 @@ terminal_nodes = [
 
 
 class Node(object):
+    counter = 1
+
     def __init__(self, name):
         self.name = name
         self.children = deque()
+        self.unique_id = str(Node.counter)
+        Node.counter += 1
 
     def make_right_child(self, other):
         self.children.append(other)
@@ -152,3 +157,25 @@ class AST(object):
 
     def _delete_top(self):
         self.stack.pop()
+
+
+class ASTVisualizer(object):
+    def __init__(self, ast):
+        self.ast = ast
+        self.dot = Digraph(name='AST', comment='Abstract Syntax Tree')
+
+    def visualize(self):
+        root = self.ast.root
+        self._add_nodes(root)
+        self._add_edges(root)
+        self.dot.render()
+
+    def _add_nodes(self, root):
+        self.dot.node(root.unique_id, root.name)
+        for child in root.children:
+            self._add_nodes(child)
+
+    def _add_edges(self, root):
+        for child in root.children:
+            self.dot.edge(root.unique_id, child.unique_id)
+            self._add_edges(child)

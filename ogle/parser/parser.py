@@ -163,7 +163,6 @@ class Parser(object):
         self._next_token()
         self._parse_state(self._grammar.states[self._grammar.start_state])
         self.ast.finish_building()
-        pass
 
     def _parse_state(self, state, panic_mode=False):
         # If we reached the end of the file, finish the function
@@ -174,8 +173,7 @@ class Parser(object):
             if self._lookahead == state.name:
                 # Create AST node if should be created
                 if self._lookahead in terminal_nodes:
-                    # self.ast.make_node(self._lookahead_lextoken.value)
-                    self.ast.perform_operation('#1', self._lookahead_lextoken.value)
+                    self.ast.make_node(self._lookahead_lextoken.value)
 
                 self._next_token()
                 return True
@@ -186,8 +184,7 @@ class Parser(object):
         if self._lookahead not in state.first_set:
             if (panic_mode or state.nullable()) and self._lookahead in state.follow_set:
                 # Create an empty node in AST
-                # self.ast.make_node(state.name)
-                self.ast.perform_operation('#1', state.name)
+                self.ast.make_node(state.name)
                 return True
             else:
                 return False
