@@ -41,8 +41,8 @@ class Lexer(object):
         while self.pointer_pos < self.text_len:
             # Skip any whitespace
             if self.text[self.pointer_pos] in whitespace:
-                self.pointer_pos += 1
                 self.line_position += 4 if self.text[self.pointer_pos] == '\t' else 1
+                self.pointer_pos += 1
                 continue
 
             # Check for line end character
