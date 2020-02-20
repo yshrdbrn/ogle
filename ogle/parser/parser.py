@@ -1,10 +1,11 @@
 import os
 from ogle.parser.grammar_spec import terminals, tokens_to_terminals
 from ogle.parser.ast import AST, terminal_nodes
+from ogle.parser.parse_tree import ParseTree, ParseNode
 
 
-def is_semantic_action(input):
-    return '#' in input
+def is_semantic_action(input_rule):
+    return '#' in input_rule
 
 
 class State(object):
@@ -143,6 +144,7 @@ class Parser(object):
         self._grammar = Grammar()
         self.errors = []
         self.ast = AST()
+        self.parse_tree = ParseTree(self._grammar.start_state)
 
     def _next_token(self):
         # Check for a lexer error
@@ -161,10 +163,10 @@ class Parser(object):
 
     def parse(self):
         self._next_token()
-        self._parse_state(self._grammar.states[self._grammar.start_state])
+        self._parse_state(self._grammar.states[self._grammar.start_state], self.parse_tree.root)
         self.ast.finish_building()
 
-    def _parse_state(self, state, panic_mode=False):
+    def _parse_state(self, state, parse_node, panic_mode=False):
         # If we reached the end of the file, finish the function
         if panic_mode and self._lookahead == '$':
             return True
@@ -174,7 +176,7 @@ class Parser(object):
                 # Create AST node if should be created
                 if self._lookahead in terminal_nodes:
                     self.ast.make_node(self._lookahead_lextoken.value)
-
+                # Fetch the next token
                 self._next_token()
                 return True
             else:
@@ -185,6 +187,9 @@ class Parser(object):
             if (panic_mode or state.nullable()) and self._lookahead in state.follow_set:
                 # Create an empty node in AST
                 self.ast.make_node(state.name)
+                # Mark the tree node as deleted
+                parse_node.deleted = True
+                self.parse_tree.add_derivation()
                 return True
             else:
                 return False
@@ -198,7 +203,15 @@ class Parser(object):
                 production = rule
                 break
 
+        # Create parse children nodes for the state
+        for var in production:
+            if '#' in var:
+                continue
+            parse_node.add_child(ParseNode(var))
+        self.parse_tree.add_derivation()
+
         # Parse the production
+        cnt = 0
         for var in production:
             # Found a semantic action
             if '#' in var:
@@ -206,12 +219,13 @@ class Parser(object):
                 continue
 
             var_state = self._grammar.states[var]
-            result = self._parse_state(var_state)
+            result = self._parse_state(var_state, parse_node.children[cnt])
             if not result:
                 # Handle the parse error
                 self._handle_parse_error(var_state)
-                while not self._parse_state(var_state, panic_mode=True):
+                while not self._parse_state(var_state, parse_node.children[cnt], panic_mode=True):
                     self._next_token()
+            cnt += 1
         return True
 
     def _rule_can_produce_lookahead(self, rule):

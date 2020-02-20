@@ -1,0 +1,7 @@
+main
+    local
+        integer t;
+    do
+        t = 5;
+        return (t);
+    end
