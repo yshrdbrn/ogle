@@ -26,7 +26,7 @@ VISIBILITY -> private  .
 
 STATEMENT -> if lpar REL_EXPRESSION #2 rpar then STATEMENT_BLOCK #2 else STATEMENT_BLOCK #2 semi  .
 STATEMENT -> while lpar REL_EXPRESSION #2 rpar STATEMENT_BLOCK #2 semi  .
-STATEMENT -> read lpar STATEMENT_VARIABLE #8 #5 #2 rpar semi  .
+STATEMENT -> read lpar STATEMENT_VARIABLE #6 #5 #2 rpar semi  .
 STATEMENT -> write lpar EXPRESSION #2 rpar semi  .
 STATEMENT -> return lpar EXPRESSION #2 rpar semi  .
 STATEMENT -> ASSIGN_STATEMENT_OR_FUNCTION_CALL .
