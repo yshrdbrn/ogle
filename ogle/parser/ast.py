@@ -95,13 +95,11 @@ class AST(object):
         elif operation_number == 4:
             self._adopt_right_children()
         elif operation_number == 5:
-            self._adopt_left_children()
-        elif operation_number == 6:
-            self._adopt_multiple_left_children(operation[3:-1])
-        elif operation_number == 7:
             self._group_together()
-        elif operation_number == 8:
+        elif operation_number == 6:
             self._delete_top()
+        elif operation_number == 7:
+            self._replace_node_with_child()
         else:
             raise ValueError
 
@@ -130,21 +128,6 @@ class AST(object):
         x.adopt_children_right(y)
         self.stack.append(x)
 
-    # Pop X & Y, Y adopts X's children, push Y
-    def _adopt_left_children(self):
-        y = self.stack.pop()
-        x = self.stack.pop()
-        y.adopt_children_left(x)
-        self.stack.append(y)
-
-    # Merge all Xs' children out of stack as long as Xs' have the name 'name'
-    def _adopt_multiple_left_children(self, name):
-        x = self.stack.pop()
-        while self.stack[-1].name == name:
-            x.adopt_children_left(self.stack[-1])
-            self.stack.pop()
-        self.stack.append(x)
-
     # Group all the Xs on top the stack with the same name under one Z
     def _group_together(self):
         x = self.stack.pop()
@@ -157,6 +140,13 @@ class AST(object):
 
     def _delete_top(self):
         self.stack.pop()
+
+    # if X has only one child, replace it with the child
+    def _replace_node_with_child(self):
+        x = self.stack.pop()
+        if len(x.children) == 1:
+            x = x.children[0]
+        self.stack.append(x)
 
 
 class ASTVisualizer(object):
