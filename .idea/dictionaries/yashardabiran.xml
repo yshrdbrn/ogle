@@ -2,6 +2,7 @@
   <dictionary name="yashardabiran">
     <words>
       <w>lextoken</w>
+      <w>qualname</w>
     </words>
   </dictionary>
 </component>
