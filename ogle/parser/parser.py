@@ -175,7 +175,7 @@ class Parser(object):
             if self._lookahead == state.name:
                 # Create AST node if should be created
                 if self._lookahead in terminal_nodes:
-                    self.ast.make_node(self._lookahead_lextoken.value)
+                    self.ast.make_node(self._lookahead_lextoken.type, self._lookahead_lextoken.value)
                 # Fetch the next token
                 self._next_token()
                 return True
