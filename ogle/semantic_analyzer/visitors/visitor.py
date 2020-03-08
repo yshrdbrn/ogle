@@ -19,12 +19,14 @@ def _declaring_class(obj):
 _methods = {}
 
 # Delegate visitor implementation
-def _visitor_impl(self, node):
+def _visitor_impl(self, node, scope=None):
     """Actual visitor method implementation."""
     method = _methods[(_qualname(type(self)), node.node_type)]
     if not method:
         method = _methods[(_qualname(type(self)), NodeType.GENERAL)]
-    return method(self, node)
+    if not scope:
+        scope = self.symbol_table.global_scope
+    return method(self, node, scope)
 
 # @visitor decorator
 def visitor(node_type):

@@ -14,6 +14,7 @@ class NodeType(Enum):
     FUNCTION_PARAMETERS = auto()
     INHERITS = auto()
     LOCAL_SCOPE = auto()
+    MAIN = auto()
     PROGRAM = auto()
     VARIABLE_DECLARATION = auto()
 
@@ -53,11 +54,12 @@ class Node(object):
 node_name_to_type = {
     'ARRAY_DIMENSIONS': NodeType.ARRAY_DIMENSIONS,
     'class': NodeType.CLASS_DECLARATION,
+    'function': NodeType.FUNCTION_DEFINITION,
     'FUNCTION_BODY': NodeType.FUNCTION_BODY,
     'FUNCTION_DECLARATION': NodeType.FUNCTION_DECLARATION,
-    'FUNCTION_DEFINITION': NodeType.FUNCTION_DEFINITION,
     'FUNCTION_PARAMS': NodeType.FUNCTION_PARAMETERS,
     'LOCAL_SCOPE': NodeType.LOCAL_SCOPE,
+    'main': NodeType.MAIN,
     'OPTIONAL_INHERITS': NodeType.INHERITS,
     'PROGRAM': NodeType.PROGRAM,
     'VARIABLE_DECLARATION': NodeType.VARIABLE_DECLARATION
