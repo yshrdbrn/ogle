@@ -49,7 +49,8 @@ class SymbolTableVisitor(object):
 
     @visitor(NodeType.FUNCTION_BODY)
     def visit(self, node, scope):
-        pass
+        local_scope = node.children[0]
+        self.visit(local_scope, scope)
 
     @visitor(NodeType.FUNCTION_DECLARATION)
     def visit(self, node, scope):
@@ -69,14 +70,31 @@ class SymbolTableVisitor(object):
         return Function(name, params, return_type, visibility)
 
     @visitor(NodeType.FUNCTION_DEFINITION)
-    def visit(self, node):
-        pass
+    def visit(self, node, scope):
+        signature = node.children[0]
+        body = node.children[1]
+
+        # Fetch function's scope
+        scope = self._function_scope(signature)
+
+        # Visit function body
+        self.visit(body, scope)
+
+    def _function_scope(self, func_signature):
+        if len(func_signature.children) == 3:
+            # Free function
+            scope = self.symbol_table.global_scope
+        else:
+            namespace = func_signature.children[0].children[0].value
+            cls = self.symbol_table.global_scope.get_child(namespace)
+            scope = cls.scope
+        return scope
 
     @visitor(NodeType.FUNCTION_PARAMETERS)
     def visit(self, node, scope):
         params = FunctionParameters()
         for child in node.children:
-            params.add_param(self._variable_decl(child))
+            params.add_param(self._variable_decl(child, scope))
         return params
 
     @visitor(NodeType.INHERITS)
@@ -88,11 +106,13 @@ class SymbolTableVisitor(object):
 
     @visitor(NodeType.LOCAL_SCOPE)
     def visit(self, node, scope):
-        pass
+        for child in node.children:
+            scope.add_child(self.visit(child, scope))
 
     @visitor(NodeType.MAIN)
     def visit(self, node, scope):
-        pass
+        # Visit function body
+        self.visit(node.children[0], scope)
 
     @visitor(NodeType.PROGRAM)
     def visit(self, node, scope):
@@ -103,8 +123,8 @@ class SymbolTableVisitor(object):
         for class_declaration in class_declarations:
             scope.add_child(self.visit(class_declaration, scope))
         for function_definition in function_definitions:
-            scope.add_child(self.visit(function_definition, scope))
-        scope.add_child(self.visit(main, scope))
+            self.visit(function_definition, scope)
+        self.visit(main, scope)
 
     @visitor(NodeType.VARIABLE_DECLARATION)
     def visit(self, node, scope):

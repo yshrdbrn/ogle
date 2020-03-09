@@ -9,6 +9,9 @@ class Scope(object):
         name = identifier.name
         self.child_identifiers[name] = identifier
 
+    def get_child(self, name):
+        return self.child_identifiers[name]
+
 
 @unique
 class IdentifierType(Enum):
