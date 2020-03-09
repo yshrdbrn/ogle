@@ -26,9 +26,9 @@ class Visibility(Enum):
 
     @classmethod
     def visibility_from_string(cls, input_string):
-        if input_string == 'public':
+        if input_string == 'PUBLIC':
             return Visibility.PUBLIC
-        elif input_string == 'private':
+        elif input_string == 'PRIVATE':
             return Visibility.PRIVATE
         else:
             assert False

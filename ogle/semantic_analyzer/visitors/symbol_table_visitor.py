@@ -42,7 +42,7 @@ class SymbolTableVisitor(object):
         class_scope = class_identifier.scope
 
         # Add members to scope
-        for member in member_declarations:
+        for member in member_declarations.children:
             class_scope.add_child(self.visit(member, class_scope))
 
         return class_identifier
@@ -75,20 +75,26 @@ class SymbolTableVisitor(object):
         body = node.children[1]
 
         # Fetch function's scope
-        scope = self._function_scope(signature)
+        identifier = self._function_identifier(signature, scope)
 
         # Visit function body
-        self.visit(body, scope)
+        self.visit(body, identifier.scope)
 
-    def _function_scope(self, func_signature):
+    def _function_identifier(self, func_signature, scope):
         if len(func_signature.children) == 3:
-            # Free function
-            scope = self.symbol_table.global_scope
+            # It's a free function
+            name = func_signature.children[0].value
+            params = self.visit(func_signature.children[1], scope)
+            return_type = func_signature.children[2].value
+            func_identifier = Function(name, params, return_type)
+            self.symbol_table.global_scope.add_child(func_identifier)
         else:
             namespace = func_signature.children[0].children[0].value
+            name = func_signature.children[1].value
             cls = self.symbol_table.global_scope.get_child(namespace)
-            scope = cls.scope
-        return scope
+            func_identifier = cls.scope.get_child(name)
+
+        return func_identifier
 
     @visitor(NodeType.FUNCTION_PARAMETERS)
     def visit(self, node, scope):
@@ -111,8 +117,10 @@ class SymbolTableVisitor(object):
 
     @visitor(NodeType.MAIN)
     def visit(self, node, scope):
+        main_function = Function('main', FunctionParameters(), 'void')
+        self.symbol_table.global_scope.add_child(main_function)
         # Visit function body
-        self.visit(node.children[0], scope)
+        self.visit(node.children[0], main_function.scope)
 
     @visitor(NodeType.PROGRAM)
     def visit(self, node, scope):
@@ -120,9 +128,9 @@ class SymbolTableVisitor(object):
         function_definitions = node.children[1]
         main = node.children[2]
 
-        for class_declaration in class_declarations:
+        for class_declaration in class_declarations.children:
             scope.add_child(self.visit(class_declaration, scope))
-        for function_definition in function_definitions:
+        for function_definition in function_definitions.children:
             self.visit(function_definition, scope)
         self.visit(main, scope)
 

@@ -53,13 +53,13 @@ class Node(object):
 
 node_name_to_type = {
     'ARRAY_DIMENSIONS': NodeType.ARRAY_DIMENSIONS,
-    'class': NodeType.CLASS_DECLARATION,
+    'CLASS': NodeType.CLASS_DECLARATION,
     'function': NodeType.FUNCTION_DEFINITION,
     'FUNCTION_BODY': NodeType.FUNCTION_BODY,
     'FUNCTION_DECLARATION': NodeType.FUNCTION_DECLARATION,
     'FUNCTION_PARAMS': NodeType.FUNCTION_PARAMETERS,
     'LOCAL_SCOPE': NodeType.LOCAL_SCOPE,
-    'main': NodeType.MAIN,
+    'MAIN': NodeType.MAIN,
     'OPTIONAL_INHERITS': NodeType.INHERITS,
     'PROGRAM': NodeType.PROGRAM,
     'VARIABLE_DECLARATION': NodeType.VARIABLE_DECLARATION
