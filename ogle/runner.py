@@ -1,6 +1,7 @@
 import argparse
 from ogle.lexer.lexer import Lexer
 from ogle.parser.parser import Parser
+from ogle.semantic_analyzer.symbol_table import SymbolTableVisualizer
 from ogle.semantic_analyzer.visitors.symbol_table_visitor import SymbolTableVisitor
 
 
@@ -21,7 +22,7 @@ def main():
         # build the symbol table
         visitor = SymbolTableVisitor()
         visitor.visit(ast.root)
-        pass
+        print(SymbolTableVisualizer(visitor.symbol_table).visualize())
 
 
 if __name__ == '__main__':

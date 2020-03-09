@@ -46,6 +46,17 @@ class Class(Identifier):
         self.inherits = inherits
         self.scope = Scope()
 
+    def __str__(self):
+        to_ret = f'class {self.name}'
+        if self.inherits:
+            to_ret += f' inherits {self.inherits[0]}'
+            for i in range(1, len(self.inherits)):
+                to_ret += f', {self.inherits[i]}'
+        return to_ret
+
+    def __repr__(self):
+        return str(self)
+
 
 class Function(Identifier):
     def __init__(self, name, parameters, return_type, visibility=None):
@@ -54,6 +65,18 @@ class Function(Identifier):
         self.return_type = return_type
         self.visibility = visibility
         self.scope = Scope()
+
+    def __str__(self):
+        to_ret = f'func {self.name}('
+        if self.parameters.params:
+            to_ret += str(self.parameters.params[0])
+            for i in range(1, len(self.parameters.params)):
+                to_ret += f', {self.parameters.params[i]}'
+        to_ret += f') returns {self.return_type}'
+        return to_ret
+
+    def __repr__(self):
+        return str(self)
 
 
 class FunctionParameters(object):
@@ -71,7 +94,43 @@ class Variable(Identifier):
         self.dimensions = dimensions
         self.visibility = visibility
 
+    def __str__(self):
+        to_ret = ''
+        if self.visibility:
+            to_ret += f'{self.visibility} '
+        to_ret += f'{self.type} {self.name}'
+        for dimension in self.dimensions:
+            if dimension:
+                to_ret += f'[{dimension}]'
+            else:
+                to_ret += '[]'
+        return to_ret
+
+    def __repr__(self):
+        return str(self)
+
 
 class SymbolTable(object):
     def __init__(self):
         self.global_scope = Scope()
+
+
+class SymbolTableVisualizer(object):
+    def __init__(self, symbol_table):
+        self.global_scope = symbol_table.global_scope
+
+    def visualize(self):
+        to_ret = 'Global scope:\n'
+        for child in self.global_scope.child_identifiers.values():
+            to_ret += f'{self._parse_table(child, 1)}\n'
+        return to_ret
+
+    def _parse_table(self, identifier, indent):
+        to_ret = ''
+        for i in range(indent):
+            to_ret += '\t'
+        to_ret += f'- {identifier}\n'
+        if identifier.identifier_type != IdentifierType.VARIABLE:
+            for child in identifier.scope.child_identifiers.values():
+                to_ret += self._parse_table(child, indent + 1)
+        return to_ret
