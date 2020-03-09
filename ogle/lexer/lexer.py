@@ -1,5 +1,5 @@
 import re
-from ogle.language_spec import *
+from ogle.lexer.language_spec import *
 
 
 class LexToken(object):
