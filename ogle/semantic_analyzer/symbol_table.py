@@ -73,12 +73,7 @@ class Function(Identifier):
         to_ret = ''
         if self.visibility:
             to_ret += f'{self.visibility} '
-        to_ret += f'func {self.name}('
-        if self.parameters.params:
-            to_ret += str(self.parameters.params[0])
-            for i in range(1, len(self.parameters.params)):
-                to_ret += f', {self.parameters.params[i]}'
-        to_ret += f') returns {self.return_type}'
+        to_ret += f'func {self.name}({self.parameters}) returns {self.return_type}'
         return to_ret
 
     def __repr__(self):
@@ -91,6 +86,23 @@ class FunctionParameters(object):
 
     def add_param(self, variable):
         self.params.append(variable)
+
+    def __str__(self):
+        def dimensions(dims):
+            dims_out = ''
+            for dim in dims:
+                if dim:
+                    dims_out += f'[{dim}]'
+                else:
+                    dims_out += '[]'
+            return dims_out
+
+        to_ret = ''
+        if self.params:
+            to_ret += f'{self.params[0].type}{dimensions(self.params[0].dimensions)}'
+            for i in range(1, len(self.params)):
+                to_ret += f', {self.params[i].type}{dimensions(self.params[i].dimensions)}'
+        return to_ret
 
 
 class Variable(Identifier):

@@ -74,8 +74,11 @@ class SymbolTableVisitor(object):
         signature = node.children[0]
         body = node.children[1]
 
-        # Fetch function's scope
+        # Fetch function's identifier
         identifier = self._function_identifier(signature, scope)
+
+        # Add function parameters to its scope
+        self._add_params_to_func_vars(signature, identifier.scope)
 
         # Visit function body
         self.visit(body, identifier.scope)
@@ -95,6 +98,16 @@ class SymbolTableVisitor(object):
             func_identifier = cls.scope.get_child(name)
 
         return func_identifier
+
+    def _add_params_to_func_vars(self, signature, scope):
+        if len(signature.children) == 3:
+            params_node = signature.children[1]
+        else:
+            params_node = signature.children[2]
+
+        for child in params_node.children:
+            var = self._variable_decl(child, scope)
+            scope.add_child(var)
 
     @visitor(NodeType.FUNCTION_PARAMETERS)
     def visit(self, node, scope):
