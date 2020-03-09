@@ -33,6 +33,9 @@ class Visibility(Enum):
         else:
             assert False
 
+    def __str__(self):
+        return self.name.lower()
+
 
 class Identifier(object):
     def __init__(self, name, identifier_type):
@@ -67,7 +70,10 @@ class Function(Identifier):
         self.scope = Scope()
 
     def __str__(self):
-        to_ret = f'func {self.name}('
+        to_ret = ''
+        if self.visibility:
+            to_ret += f'{self.visibility} '
+        to_ret += f'func {self.name}('
         if self.parameters.params:
             to_ret += str(self.parameters.params[0])
             for i in range(1, len(self.parameters.params)):

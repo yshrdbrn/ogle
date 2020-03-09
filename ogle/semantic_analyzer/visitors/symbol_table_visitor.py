@@ -141,7 +141,7 @@ class SymbolTableVisitor(object):
     def _variable_decl(self, node, scope):
         # If variable has visibility
         if len(node.children) == 4:
-            visibility = node.children[0].value
+            visibility = Visibility.visibility_from_string(node.children[0].name)
             var_type = node.children[1].value
             name = node.children[2].value
             dimensions = node.children[3]
