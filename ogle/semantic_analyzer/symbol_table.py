@@ -19,12 +19,21 @@ class Scope(object):
         if not found:
             self.child_identifiers.append(identifier)
         else:
-            raise DuplicateIdentifierError(identifier, Function.is_overload(identifier, found))
+            is_overload = Function.is_overload(identifier, found)
+            if is_overload:
+                self.child_identifiers.append(identifier)
+            raise DuplicateIdentifierError(identifier, is_overload)
 
-    def get_child(self, name):
+    def get_child_by_name(self, name):
         found = self._find_child(name)
         if found:
             return found
+        raise IdentifierNotFoundError
+
+    def get_child_by_identifier(self, identifier):
+        for child in self.child_identifiers:
+            if child == identifier:
+                return child
         raise IdentifierNotFoundError
 
     def _find_child(self, name):
@@ -95,6 +104,11 @@ class Class(Identifier):
     def __repr__(self):
         return str(self)
 
+    def __eq__(self, other):
+        if isinstance(other, Class):
+            return self.name == other.name
+        return False
+
 
 class Function(Identifier):
     def __init__(self, name, parameters, return_type, location, visibility=None, is_defined=False):
@@ -114,6 +128,11 @@ class Function(Identifier):
 
     def __repr__(self):
         return str(self)
+
+    def __eq__(self, other):
+        if isinstance(other, Function):
+            return self.name == other.name and self.parameters == other.parameters
+        return False
 
     @classmethod
     def is_overload(cls, func1, func2):

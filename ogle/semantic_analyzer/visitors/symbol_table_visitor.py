@@ -101,12 +101,20 @@ class SymbolTableVisitor(object):
             params = self.visit(func_signature.children[1], scope)
             return_type = func_signature.children[2].value
             func_identifier = Function(name_value, params, return_type, name.location, is_defined=True)
-            self.symbol_table.global_scope.add_child(func_identifier)
+            try:
+                self.symbol_table.global_scope.add_child(func_identifier)
+            except DuplicateIdentifierError as e:
+                if e.is_overload:
+                    self._handle_duplicate_identifier_error(e)
+                else:
+                    raise e
         else:
             namespace = func_signature.children[0].children[0].value
             name = func_signature.children[1].value
-            cls = self.symbol_table.global_scope.get_child(namespace)
-            func_identifier = cls.scope.get_child(name)
+            params = self.visit(func_signature.children[2], scope)
+            temp_identifier = Function(name, params, None, None)
+            cls = self.symbol_table.global_scope.get_child_by_name(namespace)
+            func_identifier = cls.scope.get_child_by_identifier(temp_identifier)
             func_identifier.is_defined = True
 
         return func_identifier

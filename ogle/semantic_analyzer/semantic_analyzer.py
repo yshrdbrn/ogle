@@ -13,7 +13,6 @@ class SemanticAnalyzer(object):
         dependency = CircularDependencyChecker.check_circular_dependency(self.symbol_table)
         self._generate_error_circular_dependency(dependency)
         self._check_undefined_functions()
-        print(self.errors)
 
     def _get_symbol_table(self):
         symbol_table_visitor = SymbolTableVisitor()
@@ -26,7 +25,7 @@ class SemanticAnalyzer(object):
             return
 
         error_message = f"Error: circular dependency between classes '{dependency[0]}' and '{dependency[1]}'."
-        location = self.symbol_table.global_scope.get_child(dependency[0]).location
+        location = self.symbol_table.global_scope.get_child_by_name(dependency[0]).location
         self.errors.append((location, error_message))
 
     def _check_undefined_functions(self):
