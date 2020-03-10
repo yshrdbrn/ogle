@@ -1,16 +1,49 @@
 from enum import Enum, unique
 
+class DuplicateIdentifierError(Exception):
+    def __init__(self, identifier, is_overload):
+        self.identifier = identifier
+        self.is_overload = is_overload
+
+
+class IdentifierNotFoundError(Exception):
+    pass
 
 class Scope(object):
     def __init__(self):
-        self.child_identifiers = {}
+        self.child_identifiers = []
 
     def add_child(self, identifier):
         name = identifier.name
-        self.child_identifiers[name] = identifier
+        found = self._find_child(name)
+        if not found:
+            self.child_identifiers.append(identifier)
+        else:
+            raise DuplicateIdentifierError(identifier, Function.is_overload(identifier, found))
 
     def get_child(self, name):
-        return self.child_identifiers[name]
+        found = self._find_child(name)
+        if found:
+            return found
+        raise IdentifierNotFoundError
+
+    def _find_child(self, name):
+        for child in self.child_identifiers:
+            if child.name == name:
+                return child
+        return None
+
+    def get_classes(self):
+        return self._get_identifier_type(IdentifierType.CLASS)
+
+    def get_functions(self):
+        return self._get_identifier_type(IdentifierType.FUNCTION)
+
+    def get_variables(self):
+        return self._get_identifier_type(IdentifierType.VARIABLE)
+
+    def _get_identifier_type(self, identifier_type):
+        return [child for child in self.child_identifiers if child.identifier_type == identifier_type]
 
 
 @unique
@@ -20,6 +53,7 @@ class IdentifierType(Enum):
     VARIABLE = 3
 
 
+@unique
 class Visibility(Enum):
     PUBLIC = 1
     PRIVATE = 2
@@ -63,12 +97,13 @@ class Class(Identifier):
 
 
 class Function(Identifier):
-    def __init__(self, name, parameters, return_type, location, visibility=None):
+    def __init__(self, name, parameters, return_type, location, visibility=None, is_defined=False):
         super().__init__(name, IdentifierType.FUNCTION, location)
         self.parameters = parameters
         self.return_type = return_type
         self.visibility = visibility
         self.scope = Scope()
+        self.is_defined = is_defined
 
     def __str__(self):
         to_ret = ''
@@ -79,6 +114,12 @@ class Function(Identifier):
 
     def __repr__(self):
         return str(self)
+
+    @classmethod
+    def is_overload(cls, func1, func2):
+        if isinstance(func1, Function) and isinstance(func2, Function):
+            return func1.name == func2.name and func1.parameters != func2.parameters
+        return False
 
 
 class FunctionParameters(object):
@@ -105,6 +146,16 @@ class FunctionParameters(object):
                 to_ret += f', {self.params[i].type}{dimensions(self.params[i].dimensions)}'
         return to_ret
 
+    def __eq__(self, other):
+        if isinstance(other, FunctionParameters):
+            if len(self.params) != len(other.params):
+                return False
+            for i in range(len(self.params)):
+                if self.params[i] != other.params[i]:
+                    return False
+            return True
+        return False
+
 
 class Variable(Identifier):
     def __init__(self, name, var_type, dimensions, location, visibility=None):
@@ -128,6 +179,10 @@ class Variable(Identifier):
     def __repr__(self):
         return str(self)
 
+    def __eq__(self, other):
+        if isinstance(other, Variable):
+            return self.type == other.type and self.dimensions == other.dimensions
+
 
 class SymbolTable(object):
     def __init__(self):
@@ -140,7 +195,7 @@ class SymbolTableVisualizer(object):
 
     def visualize(self):
         to_ret = 'Global scope:\n'
-        for child in self.global_scope.child_identifiers.values():
+        for child in self.global_scope.child_identifiers:
             to_ret += f'{self._parse_table(child, 1)}\n'
         return to_ret
 
@@ -150,6 +205,6 @@ class SymbolTableVisualizer(object):
             to_ret += '\t'
         to_ret += f'- {identifier}\n'
         if identifier.identifier_type != IdentifierType.VARIABLE:
-            for child in identifier.scope.child_identifiers.values():
+            for child in identifier.scope.child_identifiers:
                 to_ret += self._parse_table(child, indent + 1)
         return to_ret

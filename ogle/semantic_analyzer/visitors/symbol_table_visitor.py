@@ -6,6 +6,7 @@ from ogle.semantic_analyzer.visitors.visitor import visitor
 class SymbolTableVisitor(object):
     def __init__(self):
         self.symbol_table = SymbolTable()
+        self.errors = []
 
     # This function should never be called
     @visitor(NodeType.GENERAL)
@@ -43,7 +44,10 @@ class SymbolTableVisitor(object):
 
         # Add members to scope
         for member in member_declarations.children:
-            class_scope.add_child(self.visit(member, class_scope))
+            try:
+                class_scope.add_child(self.visit(member, class_scope))
+            except DuplicateIdentifierError as e:
+                self._handle_duplicate_identifier_error(e)
 
         return class_identifier
 
@@ -67,21 +71,27 @@ class SymbolTableVisitor(object):
         return_type = return_type.value
 
         # Create the Function identifier
-        return Function(name_value, params, return_type, name.location, visibility)
+        return Function(name_value, params, return_type, name.location, visibility=visibility, is_defined=False)
 
     @visitor(NodeType.FUNCTION_DEFINITION)
     def visit(self, node, scope):
         signature = node.children[0]
         body = node.children[1]
 
-        # Fetch function's identifier
-        identifier = self._function_identifier(signature, scope)
+        try:
+            # Fetch function's identifier
+            identifier = self._function_identifier(signature, scope)
 
-        # Add function parameters to its scope
-        self._add_params_to_func_vars(signature, identifier.scope)
+            # Add function parameters to its scope
+            self._add_params_to_func_vars(signature, identifier.scope)
 
-        # Visit function body
-        self.visit(body, identifier.scope)
+            # Visit function body
+            self.visit(body, identifier.scope)
+        except DuplicateIdentifierError as e:
+            self._handle_duplicate_identifier_error(e)
+        except IdentifierNotFoundError:
+            id_node = signature.children[1]
+            self.errors.append((id_node.location, f"Error: function '{id_node.value}' has no declaration."))
 
     def _function_identifier(self, func_signature, scope):
         if len(func_signature.children) == 3:
@@ -90,13 +100,14 @@ class SymbolTableVisitor(object):
             name_value = name.value
             params = self.visit(func_signature.children[1], scope)
             return_type = func_signature.children[2].value
-            func_identifier = Function(name_value, params, return_type, name.location)
+            func_identifier = Function(name_value, params, return_type, name.location, is_defined=True)
             self.symbol_table.global_scope.add_child(func_identifier)
         else:
             namespace = func_signature.children[0].children[0].value
             name = func_signature.children[1].value
             cls = self.symbol_table.global_scope.get_child(namespace)
             func_identifier = cls.scope.get_child(name)
+            func_identifier.is_defined = True
 
         return func_identifier
 
@@ -108,7 +119,10 @@ class SymbolTableVisitor(object):
 
         for child in params_node.children:
             var = self._variable_decl(child, scope)
-            scope.add_child(var)
+            try:
+                scope.add_child(var)
+            except DuplicateIdentifierError as e:
+                self._handle_duplicate_identifier_error(e)
 
     @visitor(NodeType.FUNCTION_PARAMETERS)
     def visit(self, node, scope):
@@ -127,11 +141,14 @@ class SymbolTableVisitor(object):
     @visitor(NodeType.LOCAL_SCOPE)
     def visit(self, node, scope):
         for child in node.children:
-            scope.add_child(self.visit(child, scope))
+            try:
+                scope.add_child(self.visit(child, scope))
+            except DuplicateIdentifierError as e:
+                self._handle_duplicate_identifier_error(e)
 
     @visitor(NodeType.MAIN)
     def visit(self, node, scope):
-        main_function = Function('main', FunctionParameters(), 'void', node.location)
+        main_function = Function('main', FunctionParameters(), 'void', node.location, is_defined=True)
         self.symbol_table.global_scope.add_child(main_function)
         # Visit function body
         self.visit(node.children[0], main_function.scope)
@@ -143,7 +160,10 @@ class SymbolTableVisitor(object):
         main = node.children[2]
 
         for class_declaration in class_declarations.children:
-            scope.add_child(self.visit(class_declaration, scope))
+            try:
+                scope.add_child(self.visit(class_declaration, scope))
+            except DuplicateIdentifierError as e:
+                self._handle_duplicate_identifier_error(e)
         for function_definition in function_definitions.children:
             self.visit(function_definition, scope)
         self.visit(main, scope)
@@ -170,3 +190,10 @@ class SymbolTableVisitor(object):
         dimensions = self.visit(dimensions, scope)
 
         return Variable(name_value, var_type, dimensions, name.location, visibility)
+
+    def _handle_duplicate_identifier_error(self, error):
+        if error.is_overload:
+            error_message = f"Warning: overloading function '{error.identifier.name}'."
+        else:
+            error_message = f"Error: duplicate identifier '{error.identifier.name}' in the scope."
+        self.errors.append((error.identifier.location, error_message))
