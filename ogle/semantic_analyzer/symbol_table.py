@@ -38,14 +38,15 @@ class Visibility(Enum):
 
 
 class Identifier(object):
-    def __init__(self, name, identifier_type):
+    def __init__(self, name, identifier_type, location):
         self.name = name
         self.identifier_type = identifier_type
+        self.location = location
 
 
 class Class(Identifier):
-    def __init__(self, name, inherits):
-        super().__init__(name, IdentifierType.CLASS)
+    def __init__(self, name, inherits, location):
+        super().__init__(name, IdentifierType.CLASS, location)
         self.inherits = inherits
         self.scope = Scope()
 
@@ -62,8 +63,8 @@ class Class(Identifier):
 
 
 class Function(Identifier):
-    def __init__(self, name, parameters, return_type, visibility=None):
-        super().__init__(name, IdentifierType.FUNCTION)
+    def __init__(self, name, parameters, return_type, location, visibility=None):
+        super().__init__(name, IdentifierType.FUNCTION, location)
         self.parameters = parameters
         self.return_type = return_type
         self.visibility = visibility
@@ -106,8 +107,8 @@ class FunctionParameters(object):
 
 
 class Variable(Identifier):
-    def __init__(self, name, var_type, dimensions, visibility=None):
-        super().__init__(name, IdentifierType.VARIABLE)
+    def __init__(self, name, var_type, dimensions, location, visibility=None):
+        super().__init__(name, IdentifierType.VARIABLE, location)
         self.type = var_type
         self.dimensions = dimensions
         self.visibility = visibility

@@ -46,10 +46,10 @@ class AST(object):
         self.stack = deque()
         self.ignore_input = False
 
-    def make_node(self, name, value=None):
+    def make_node(self, name, value=None, location=None):
         if self.ignore_input:
             return
-        self.stack.append(Node(name, value))
+        self.stack.append(Node(name, value, location))
 
     def perform_operation(self, operation, lhs_name):
         if self.ignore_input:

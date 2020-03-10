@@ -34,11 +34,11 @@ class SymbolTableVisitor(object):
         member_declarations = node.children[2]
 
         # Retrieve the result values
-        name = name.value
+        name_value = name.value
         inherits = self.visit(inherits, scope)
 
         # Create the class identifier
-        class_identifier = Class(name, inherits)
+        class_identifier = Class(name_value, inherits, name.location)
         class_scope = class_identifier.scope
 
         # Add members to scope
@@ -62,12 +62,12 @@ class SymbolTableVisitor(object):
 
         # Retrieve the result values
         visibility = Visibility.visibility_from_string(visibility.name)
-        name = name.value
+        name_value = name.value
         params = self.visit(params, scope)
         return_type = return_type.value
 
         # Create the Function identifier
-        return Function(name, params, return_type, visibility)
+        return Function(name_value, params, return_type, name.location, visibility)
 
     @visitor(NodeType.FUNCTION_DEFINITION)
     def visit(self, node, scope):
@@ -86,10 +86,11 @@ class SymbolTableVisitor(object):
     def _function_identifier(self, func_signature, scope):
         if len(func_signature.children) == 3:
             # It's a free function
-            name = func_signature.children[0].value
+            name = func_signature.children[0]
+            name_value = name.value
             params = self.visit(func_signature.children[1], scope)
             return_type = func_signature.children[2].value
-            func_identifier = Function(name, params, return_type)
+            func_identifier = Function(name_value, params, return_type, name.location)
             self.symbol_table.global_scope.add_child(func_identifier)
         else:
             namespace = func_signature.children[0].children[0].value
@@ -130,7 +131,7 @@ class SymbolTableVisitor(object):
 
     @visitor(NodeType.MAIN)
     def visit(self, node, scope):
-        main_function = Function('main', FunctionParameters(), 'void')
+        main_function = Function('main', FunctionParameters(), 'void', node.location)
         self.symbol_table.global_scope.add_child(main_function)
         # Visit function body
         self.visit(node.children[0], main_function.scope)
@@ -156,15 +157,16 @@ class SymbolTableVisitor(object):
         if len(node.children) == 4:
             visibility = Visibility.visibility_from_string(node.children[0].name)
             var_type = node.children[1].value
-            name = node.children[2].value
+            name = node.children[2]
             dimensions = node.children[3]
         else:
             visibility = None
             var_type = node.children[0].value
-            name = node.children[1].value
+            name = node.children[1]
             dimensions = node.children[2]
 
         # Extract the result values
+        name_value = name.value
         dimensions = self.visit(dimensions, scope)
 
-        return Variable(name, var_type, dimensions, visibility)
+        return Variable(name_value, var_type, dimensions, name.location, visibility)

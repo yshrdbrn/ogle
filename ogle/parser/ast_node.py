@@ -22,10 +22,11 @@ class NodeType(Enum):
 class Node(object):
     counter = 1
 
-    def __init__(self, name, value=None):
+    def __init__(self, name, value=None, location=None):
         self.name = name
         self.node_type = node_name_to_type[name] if name in node_name_to_type else NodeType.GENERAL
         self.value = value if value else name
+        self.location = location
         self.children = deque()
         self.unique_id = str(Node.counter)
         Node.counter += 1
