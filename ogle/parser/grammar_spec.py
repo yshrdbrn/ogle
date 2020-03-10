@@ -1,4 +1,4 @@
-from ogle.language_spec import reserved_keywords
+from ogle.lexer.language_spec import reserved_keywords
 
 
 # A map from terminals to token types

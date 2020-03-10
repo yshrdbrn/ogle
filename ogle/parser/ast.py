@@ -1,5 +1,6 @@
 from collections import deque
 from graphviz import Digraph
+from ogle.parser.ast_node import Node
 
 
 terminal_nodes = [
@@ -18,7 +19,6 @@ terminal_nodes = [
     'write',
     'return',
     'main',
-    'inherits',
     'void',
 
     'id',
@@ -40,46 +40,16 @@ terminal_nodes = [
 ]
 
 
-class Node(object):
-    counter = 1
-
-    def __init__(self, name):
-        self.name = name
-        self.children = deque()
-        self.unique_id = str(Node.counter)
-        Node.counter += 1
-
-    def make_right_child(self, other):
-        self.children.append(other)
-
-    def make_left_child(self, other):
-        self.children.appendleft(other)
-
-    def adopt_children_right(self, other):
-        for child in other.children:
-            self.children.append(child)
-
-    def adopt_children_left(self, other):
-        for child in reversed(other.children):
-            self.children.appendleft(child)
-
-    def __str__(self):
-        return 'Node({})'.format(self.name)
-
-    def __repr__(self):
-        return str(self)
-
-
 class AST(object):
     def __init__(self):
         self.root = None
         self.stack = deque()
         self.ignore_input = False
 
-    def make_node(self, name):
+    def make_node(self, name, value=None, location=None):
         if self.ignore_input:
             return
-        self.stack.append(Node(name))
+        self.stack.append(Node(name, value, location))
 
     def perform_operation(self, operation, lhs_name):
         if self.ignore_input:
@@ -161,7 +131,7 @@ class ASTVisualizer(object):
         self.dot.render(filename=input_file_name + '_AST.gv')
 
     def _add_nodes(self, root):
-        self.dot.node(root.unique_id, root.name)
+        self.dot.node(root.unique_id, root.value)
         for child in root.children:
             self._add_nodes(child)
 
