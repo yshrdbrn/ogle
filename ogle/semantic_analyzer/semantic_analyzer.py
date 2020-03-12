@@ -1,3 +1,4 @@
+from ogle.semantic_analyzer.semantic_errors import *
 from ogle.semantic_analyzer.symbol_table import IdentifierType, SymbolTableVisualizer
 from ogle.semantic_analyzer.visitors.symbol_table_visitor import SymbolTableVisitor
 
@@ -21,6 +22,7 @@ class SemanticAnalyzer(object):
         return symbol_table_visitor.symbol_table
 
     def _generate_error_circular_dependency(self, dependency):
+        self.errors.extend(CircularDependencyChecker.errors)
         if not dependency:
             return
 
@@ -38,18 +40,23 @@ class SemanticAnalyzer(object):
 
 
 class CircularDependencyChecker:
+    errors = []
+
     @classmethod
     def check_circular_dependency(cls, symbol_table):
-        adj_list = cls._build_adj_list(symbol_table)
-        visited = set()
-        for class_name in adj_list:
-            if class_name not in visited:
-                visiting = set()
-                result = cls._dfs(class_name, adj_list, visiting, visited)
-                # If found a circular dependency
-                if result:
-                    return result
-                visited |= visiting
+        try:
+            adj_list = cls._build_adj_list(symbol_table)
+            visited = set()
+            for class_name in adj_list:
+                if class_name not in visited:
+                    visiting = set()
+                    result = cls._dfs(class_name, adj_list, visiting, visited)
+                    # If found a circular dependency
+                    if result:
+                        return result
+                    visited |= visiting
+        except IdentifierNotFoundError as e:
+            cls.errors.append((e.location, f"Error: class '{e.requested_string}' not defined."))
 
     @classmethod
     def _build_adj_list(cls, symbol_table):
@@ -63,10 +70,15 @@ class CircularDependencyChecker:
         # Add dependency edges
         for class_identifier in symbol_table.global_scope.get_classes():
             for parent in class_identifier.inherits:
-                adj_list[class_identifier.name].append(parent)
+                if parent in adj_list:
+                    adj_list[class_identifier.name].append(parent)
+                else:
+                    raise IdentifierNotFoundError(class_identifier, parent)
             for child in class_identifier.scope.get_variables():
                 if child.type in adj_list:
                     adj_list[class_identifier.name].append(child.type)
+                elif child.type != 'integer' and child.type != 'float':
+                    raise IdentifierNotFoundError(child.location, child.type)
 
         return adj_list
 
@@ -84,3 +96,11 @@ class CircularDependencyChecker:
                 if result:
                     return result
         return None
+
+    @classmethod
+    def _check_if_class_exists(cls, class_name, symbol_table, child_class_identifier):
+        try:
+            symbol_table.global_scope.get_child_by_name(class_name)
+        except IdentifierNotFoundError as e:
+            e.declaring_class = child_class_identifier
+            raise e

@@ -1,13 +1,5 @@
 from enum import Enum, unique
-
-class DuplicateIdentifierError(Exception):
-    def __init__(self, identifier, is_overload):
-        self.identifier = identifier
-        self.is_overload = is_overload
-
-
-class IdentifierNotFoundError(Exception):
-    pass
+from ogle.semantic_analyzer.semantic_errors import *
 
 class Scope(object):
     def __init__(self):
@@ -28,12 +20,14 @@ class Scope(object):
         found = self._find_child(name)
         if found:
             return found
-        raise IdentifierNotFoundError
+        raise IdentifierNotFoundError(requested_string=name)
 
     def get_child_by_identifier(self, identifier):
         for child in self.child_identifiers:
             if child == identifier:
                 return child
+        if identifier.identifier_type == IdentifierType.FUNCTION:
+            raise FunctionNotFoundError
         raise IdentifierNotFoundError
 
     def _find_child(self, name):

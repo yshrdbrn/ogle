@@ -89,9 +89,12 @@ class SymbolTableVisitor(object):
             self.visit(body, identifier.scope)
         except DuplicateIdentifierError as e:
             self._handle_duplicate_identifier_error(e)
-        except IdentifierNotFoundError:
+        except FunctionNotFoundError:
             id_node = signature.children[1]
             self.errors.append((id_node.location, f"Error: function '{id_node.value}' has no declaration."))
+        except IdentifierNotFoundError:
+            namespace = signature.children[0].children[0]
+            self.errors.append((namespace.location, f"Error: use of undeclared class '{namespace.value}'."))
 
     def _function_identifier(self, func_signature, scope):
         if len(func_signature.children) == 3:
