@@ -123,6 +123,11 @@ class TypeValue(object):
         else:
             return self.type.name.lower()
 
+    def __eq__(self, other):
+        if isinstance(other, TypeValue):
+            return self.type == other.type and self.value == other.value
+        return False
+
     @classmethod
     def type_from_string(cls, type_str):
         val = None

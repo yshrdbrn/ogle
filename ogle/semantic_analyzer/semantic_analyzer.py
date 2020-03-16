@@ -1,5 +1,5 @@
 from ogle.semantic_analyzer.semantic_errors import *
-from ogle.semantic_analyzer.symbol_table import IdentifierType, SymbolTableVisualizer
+from ogle.semantic_analyzer.symbol_table import Type
 from ogle.semantic_analyzer.visitors.symbol_table_visitor import SymbolTableVisitor
 
 
@@ -11,15 +11,25 @@ class SemanticAnalyzer(object):
 
     def analyze(self):
         self.symbol_table = self._get_symbol_table()
-        dependency = CircularDependencyChecker.check_circular_dependency(self.symbol_table)
-        self._generate_error_circular_dependency(dependency)
-        self._check_undefined_functions()
+        self._analyze_definition_errors()
+        if not self.errors:
+            self._analyze_statement_errors()
 
     def _get_symbol_table(self):
         symbol_table_visitor = SymbolTableVisitor()
         symbol_table_visitor.visit(self.ast.root)
         self.errors.extend(symbol_table_visitor.errors)
         return symbol_table_visitor.symbol_table
+
+    def _analyze_definition_errors(self):
+        dependency = CircularDependencyChecker.check_circular_dependency(self.symbol_table)
+        self._generate_error_circular_dependency(dependency)
+        self._check_undefined_functions()
+        self._check_for_unknown_types(self.symbol_table.global_scope)
+        self._check_shadowed_members()
+
+    def _analyze_statement_errors(self):
+        pass
 
     def _generate_error_circular_dependency(self, dependency):
         self.errors.extend(CircularDependencyChecker.errors)
@@ -36,7 +46,27 @@ class SemanticAnalyzer(object):
             for child in class_identifier.scope.get_functions():
                 if not child.is_defined:
                     error_message = f"Error: function '{child.name}' is declared but not defined."
-                    self.errors.append((child.location,error_message))
+                    self.errors.append((child.location, error_message))
+
+    def _check_for_unknown_types(self, scope):
+        for child in scope.get_classes():
+            self._check_for_unknown_types(child.scope)
+        for child in scope.get_functions():
+            self._check_type(child.return_type, child)
+            self._check_for_unknown_types(child.scope)
+        for child in scope.get_variables():
+            self._check_type(child.type, child)
+
+    def _check_type(self, t, identifier):
+        if t.type != Type.ID:
+            return
+        try:
+            self.symbol_table.global_scope.get_child_by_name(t.value)
+        except IdentifierNotFoundError:
+            self.errors.append((identifier.location, f"Unknown type for identifier '{identifier.name}'."))
+
+    def _check_shadowed_members(self):
+        classes = self.symbol_table.global_scope.get_classes()
 
 
 class CircularDependencyChecker:
@@ -75,10 +105,12 @@ class CircularDependencyChecker:
                 else:
                     raise IdentifierNotFoundError(class_identifier, parent)
             for child in class_identifier.scope.get_variables():
-                if child.type in adj_list:
-                    adj_list[class_identifier.name].append(child.type)
-                elif child.type != 'integer' and child.type != 'float':
-                    raise IdentifierNotFoundError(child.location, child.type)
+                if child.type.type == Type.ID:
+                    val = child.type.value
+                    if val in adj_list:
+                        adj_list[class_identifier.name].append(val)
+                    else:
+                        raise IdentifierNotFoundError(child.location, child.type)
 
         return adj_list
 
