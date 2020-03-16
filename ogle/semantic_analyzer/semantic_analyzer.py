@@ -1,5 +1,5 @@
 from ogle.semantic_analyzer.semantic_errors import *
-from ogle.semantic_analyzer.symbol_table import Type
+from ogle.semantic_analyzer.symbol_table import Type, Visibility
 from ogle.semantic_analyzer.visitors.symbol_table_visitor import SymbolTableVisitor
 
 
@@ -63,10 +63,37 @@ class SemanticAnalyzer(object):
         try:
             self.symbol_table.global_scope.get_child_by_name(t.value)
         except IdentifierNotFoundError:
-            self.errors.append((identifier.location, f"Unknown type for identifier '{identifier.name}'."))
+            self.errors.append((identifier.location, f"Error: Unknown type for identifier '{identifier.name}'."))
 
     def _check_shadowed_members(self):
-        classes = self.symbol_table.global_scope.get_classes()
+        for cls in self.symbol_table.global_scope.get_classes():
+            for child in cls.scope.child_identifiers:
+                if self._identifier_exists_in_class(child.name, cls.name, True):
+                    self.errors.append(
+                        (child.location,
+                         f"Warning: identifier '{child.name}' shadows parent's identifier."))
+
+    def _identifier_exists_in_class(self, name, class_name, first_call=False):
+        # Get the class identifier object
+        try:
+            cls = self.symbol_table.global_scope.get_child_by_name(class_name)
+        except IdentifierNotFoundError:
+            return None
+
+        # Check the child identifiers in cls
+        if not first_call:
+            try:
+                child = cls.scope.get_child_by_name(name)
+                if child.visibility == Visibility.PUBLIC:
+                    return True
+            except IdentifierNotFoundError:
+                pass
+
+        # Call the parents to see if identifier exists
+        for parent in cls.inherits:
+            if self._identifier_exists_in_class(name, parent):
+                return True
+        return False
 
 
 class CircularDependencyChecker:
