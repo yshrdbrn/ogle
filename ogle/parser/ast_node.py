@@ -16,6 +16,7 @@ class NodeType(Enum):
     LOCAL_SCOPE = auto()
     MAIN = auto()
     PROGRAM = auto()
+    TYPE = auto()
     VARIABLE_DECLARATION = auto()
 
 
@@ -63,5 +64,6 @@ node_name_to_type = {
     'MAIN': NodeType.MAIN,
     'OPTIONAL_INHERITS': NodeType.INHERITS,
     'PROGRAM': NodeType.PROGRAM,
+    'TYPE': NodeType.TYPE,
     'VARIABLE_DECLARATION': NodeType.VARIABLE_DECLARATION
 }

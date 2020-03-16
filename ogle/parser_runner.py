@@ -13,7 +13,7 @@ def main():
     # open the file and read
     with open(file_name, 'r') as input_file, \
             open(file_name_no_type + '.outderivation', 'w') as derivation_file, \
-            open(file_name_no_type + '.outerrors', 'w') as error_file:
+            open(file_name_no_type + '.outparseerrors', 'w') as error_file:
         input_text = input_file.read()
         lexer = Lexer(input_text)
         parser = Parser(lexer)

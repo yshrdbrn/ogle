@@ -68,7 +68,7 @@ class SymbolTableVisitor(object):
         visibility = Visibility.visibility_from_string(visibility.name)
         name_value = name.value
         params = self.visit(params, scope)
-        return_type = return_type.value
+        return_type = self.visit(return_type, scope)
 
         # Create the Function identifier
         return Function(name_value, params, return_type, name.location, visibility=visibility, is_defined=False)
@@ -89,9 +89,12 @@ class SymbolTableVisitor(object):
             self.visit(body, identifier.scope)
         except DuplicateIdentifierError as e:
             self._handle_duplicate_identifier_error(e)
-        except IdentifierNotFoundError:
+        except FunctionNotFoundError:
             id_node = signature.children[1]
             self.errors.append((id_node.location, f"Error: function '{id_node.value}' has no declaration."))
+        except IdentifierNotFoundError:
+            namespace = signature.children[0].children[0]
+            self.errors.append((namespace.location, f"Error: use of undeclared class '{namespace.value}'."))
 
     def _function_identifier(self, func_signature, scope):
         if len(func_signature.children) == 3:
@@ -99,7 +102,7 @@ class SymbolTableVisitor(object):
             name = func_signature.children[0]
             name_value = name.value
             params = self.visit(func_signature.children[1], scope)
-            return_type = func_signature.children[2].value
+            return_type = self.visit(func_signature.children[2], scope)
             func_identifier = Function(name_value, params, return_type, name.location, is_defined=True)
             try:
                 self.symbol_table.global_scope.add_child(func_identifier)
@@ -156,7 +159,8 @@ class SymbolTableVisitor(object):
 
     @visitor(NodeType.MAIN)
     def visit(self, node, scope):
-        main_function = Function('main', FunctionParameters(), 'void', node.location, is_defined=True)
+        ret_type = TypeValue(Type.VOID)
+        main_function = Function('main', FunctionParameters(), ret_type, node.location, is_defined=True)
         self.symbol_table.global_scope.add_child(main_function)
         # Visit function body
         self.visit(node.children[0], main_function.scope)
@@ -176,6 +180,11 @@ class SymbolTableVisitor(object):
             self.visit(function_definition, scope)
         self.visit(main, scope)
 
+    @visitor(NodeType.TYPE)
+    def visit(self, node, scope):
+        type_str = node.children[0].value
+        return TypeValue.type_from_string(type_str)
+
     @visitor(NodeType.VARIABLE_DECLARATION)
     def visit(self, node, scope):
         return self._variable_decl(node, scope)
@@ -184,12 +193,12 @@ class SymbolTableVisitor(object):
         # If variable has visibility
         if len(node.children) == 4:
             visibility = Visibility.visibility_from_string(node.children[0].name)
-            var_type = node.children[1].value
+            var_type = self.visit(node.children[1], scope)
             name = node.children[2]
             dimensions = node.children[3]
         else:
             visibility = None
-            var_type = node.children[0].value
+            var_type = self.visit(node.children[0], scope)
             name = node.children[1]
             dimensions = node.children[2]
 

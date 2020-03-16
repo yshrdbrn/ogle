@@ -1,4 +1,5 @@
-from ogle.semantic_analyzer.symbol_table import IdentifierType, SymbolTableVisualizer
+from ogle.semantic_analyzer.semantic_errors import *
+from ogle.semantic_analyzer.symbol_table import Type, Visibility
 from ogle.semantic_analyzer.visitors.symbol_table_visitor import SymbolTableVisitor
 
 
@@ -10,9 +11,9 @@ class SemanticAnalyzer(object):
 
     def analyze(self):
         self.symbol_table = self._get_symbol_table()
-        dependency = CircularDependencyChecker.check_circular_dependency(self.symbol_table)
-        self._generate_error_circular_dependency(dependency)
-        self._check_undefined_functions()
+        self._analyze_definition_errors()
+        if not self.errors:
+            self._analyze_statement_errors()
 
     def _get_symbol_table(self):
         symbol_table_visitor = SymbolTableVisitor()
@@ -20,7 +21,18 @@ class SemanticAnalyzer(object):
         self.errors.extend(symbol_table_visitor.errors)
         return symbol_table_visitor.symbol_table
 
+    def _analyze_definition_errors(self):
+        dependency = CircularDependencyChecker.check_circular_dependency(self.symbol_table)
+        self._generate_error_circular_dependency(dependency)
+        self._check_undefined_functions()
+        self._check_for_unknown_types(self.symbol_table.global_scope)
+        self._check_shadowed_members()
+
+    def _analyze_statement_errors(self):
+        pass
+
     def _generate_error_circular_dependency(self, dependency):
+        self.errors.extend(CircularDependencyChecker.errors)
         if not dependency:
             return
 
@@ -34,22 +46,74 @@ class SemanticAnalyzer(object):
             for child in class_identifier.scope.get_functions():
                 if not child.is_defined:
                     error_message = f"Error: function '{child.name}' is declared but not defined."
-                    self.errors.append((child.location,error_message))
+                    self.errors.append((child.location, error_message))
+
+    def _check_for_unknown_types(self, scope):
+        for child in scope.get_classes():
+            self._check_for_unknown_types(child.scope)
+        for child in scope.get_functions():
+            self._check_type(child.return_type, child)
+            self._check_for_unknown_types(child.scope)
+        for child in scope.get_variables():
+            self._check_type(child.type, child)
+
+    def _check_type(self, t, identifier):
+        if t.type != Type.ID:
+            return
+        try:
+            self.symbol_table.global_scope.get_child_by_name(t.value)
+        except IdentifierNotFoundError:
+            self.errors.append((identifier.location, f"Error: Unknown type for identifier '{identifier.name}'."))
+
+    def _check_shadowed_members(self):
+        for cls in self.symbol_table.global_scope.get_classes():
+            for child in cls.scope.child_identifiers:
+                if self._identifier_exists_in_class(child.name, cls.name, True):
+                    self.errors.append(
+                        (child.location,
+                         f"Warning: identifier '{child.name}' shadows parent's identifier."))
+
+    def _identifier_exists_in_class(self, name, class_name, first_call=False):
+        # Get the class identifier object
+        try:
+            cls = self.symbol_table.global_scope.get_child_by_name(class_name)
+        except IdentifierNotFoundError:
+            return None
+
+        # Check the child identifiers in cls
+        if not first_call:
+            try:
+                child = cls.scope.get_child_by_name(name)
+                if child.visibility == Visibility.PUBLIC:
+                    return True
+            except IdentifierNotFoundError:
+                pass
+
+        # Call the parents to see if identifier exists
+        for parent in cls.inherits:
+            if self._identifier_exists_in_class(name, parent):
+                return True
+        return False
 
 
 class CircularDependencyChecker:
+    errors = []
+
     @classmethod
     def check_circular_dependency(cls, symbol_table):
-        adj_list = cls._build_adj_list(symbol_table)
-        visited = set()
-        for class_name in adj_list:
-            if class_name not in visited:
-                visiting = set()
-                result = cls._dfs(class_name, adj_list, visiting, visited)
-                # If found a circular dependency
-                if result:
-                    return result
-                visited |= visiting
+        try:
+            adj_list = cls._build_adj_list(symbol_table)
+            visited = set()
+            for class_name in adj_list:
+                if class_name not in visited:
+                    visiting = set()
+                    result = cls._dfs(class_name, adj_list, visiting, visited)
+                    # If found a circular dependency
+                    if result:
+                        return result
+                    visited |= visiting
+        except IdentifierNotFoundError as e:
+            cls.errors.append((e.location, f"Error: class '{e.requested_string}' not defined."))
 
     @classmethod
     def _build_adj_list(cls, symbol_table):
@@ -63,10 +127,17 @@ class CircularDependencyChecker:
         # Add dependency edges
         for class_identifier in symbol_table.global_scope.get_classes():
             for parent in class_identifier.inherits:
-                adj_list[class_identifier.name].append(parent)
+                if parent in adj_list:
+                    adj_list[class_identifier.name].append(parent)
+                else:
+                    raise IdentifierNotFoundError(class_identifier, parent)
             for child in class_identifier.scope.get_variables():
-                if child.type in adj_list:
-                    adj_list[class_identifier.name].append(child.type)
+                if child.type.type == Type.ID:
+                    val = child.type.value
+                    if val in adj_list:
+                        adj_list[class_identifier.name].append(val)
+                    else:
+                        raise IdentifierNotFoundError(child.location, child.type)
 
         return adj_list
 
@@ -84,3 +155,11 @@ class CircularDependencyChecker:
                 if result:
                     return result
         return None
+
+    @classmethod
+    def _check_if_class_exists(cls, class_name, symbol_table, child_class_identifier):
+        try:
+            symbol_table.global_scope.get_child_by_name(class_name)
+        except IdentifierNotFoundError as e:
+            e.declaring_class = child_class_identifier
+            raise e

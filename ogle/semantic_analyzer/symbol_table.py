@@ -1,13 +1,5 @@
 from enum import Enum, unique
-
-class DuplicateIdentifierError(Exception):
-    def __init__(self, identifier, is_overload):
-        self.identifier = identifier
-        self.is_overload = is_overload
-
-
-class IdentifierNotFoundError(Exception):
-    pass
+from ogle.semantic_analyzer.semantic_errors import *
 
 class Scope(object):
     def __init__(self):
@@ -28,12 +20,14 @@ class Scope(object):
         found = self._find_child(name)
         if found:
             return found
-        raise IdentifierNotFoundError
+        raise IdentifierNotFoundError(requested_string=name)
 
     def get_child_by_identifier(self, identifier):
         for child in self.child_identifiers:
             if child == identifier:
                 return child
+        if identifier.identifier_type == IdentifierType.FUNCTION:
+            raise FunctionNotFoundError
         raise IdentifierNotFoundError
 
     def _find_child(self, name):
@@ -53,6 +47,14 @@ class Scope(object):
 
     def _get_identifier_type(self, identifier_type):
         return [child for child in self.child_identifiers if child.identifier_type == identifier_type]
+
+
+@unique
+class Type(Enum):
+    VOID = 1
+    INTEGER = 2
+    FLOAT = 3
+    ID = 4
 
 
 @unique
@@ -108,6 +110,37 @@ class Class(Identifier):
         if isinstance(other, Class):
             return self.name == other.name
         return False
+
+
+class TypeValue(object):
+    def __init__(self, _type, value=None):
+        self.type = _type
+        self.value = value
+
+    def __str__(self):
+        if self.value:
+            return self.value
+        else:
+            return self.type.name.lower()
+
+    def __eq__(self, other):
+        if isinstance(other, TypeValue):
+            return self.type == other.type and self.value == other.value
+        return False
+
+    @classmethod
+    def type_from_string(cls, type_str):
+        val = None
+        if type_str == 'void':
+            t = Type.VOID
+        elif type_str == 'float':
+            t = Type.FLOAT
+        elif type_str == 'integer':
+            t = Type.INTEGER
+        else:
+            t = Type.ID
+            val = type_str
+        return TypeValue(t, val)
 
 
 class Function(Identifier):
