@@ -50,6 +50,14 @@ class Scope(object):
 
 
 @unique
+class Type(Enum):
+    VOID = 1
+    INTEGER = 2
+    FLOAT = 3
+    ID = 4
+
+
+@unique
 class IdentifierType(Enum):
     CLASS = 1
     FUNCTION = 2
@@ -102,6 +110,32 @@ class Class(Identifier):
         if isinstance(other, Class):
             return self.name == other.name
         return False
+
+
+class TypeValue(object):
+    def __init__(self, _type, value=None):
+        self.type = _type
+        self.value = value
+
+    def __str__(self):
+        if self.value:
+            return self.value
+        else:
+            return self.type.name.lower()
+
+    @classmethod
+    def type_from_string(cls, type_str):
+        val = None
+        if type_str == 'void':
+            t = Type.VOID
+        elif type_str == 'float':
+            t = Type.FLOAT
+        elif type_str == 'integer':
+            t = Type.INTEGER
+        else:
+            t = Type.ID
+            val = type_str
+        return TypeValue(t, val)
 
 
 class Function(Identifier):

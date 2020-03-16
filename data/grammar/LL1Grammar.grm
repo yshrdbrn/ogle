@@ -144,13 +144,13 @@ RIGHT_REC_TERM -> MULT_OP #3 FACTOR #2 RIGHT_REC_TERM .
 RIGHT_REC_TERM ->  .
 
 TYPE_OR_VOID -> TYPE .
-TYPE_OR_VOID -> void .
+TYPE_OR_VOID -> #1(TYPE) void #2 .
 
 TYPE -> TYPE_NON_ID .
-TYPE -> id  .
+TYPE -> #1(TYPE) id #2 .
 
-TYPE_NON_ID -> integer .
-TYPE_NON_ID -> float .
+TYPE_NON_ID -> #1(TYPE) integer #2 .
+TYPE_NON_ID -> #1(TYPE) float #2 .
 
 ARRAY_SIZE -> #1 lsqbr OPTIONAL_INT #2 rsqbr .
 
