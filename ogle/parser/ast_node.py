@@ -95,6 +95,7 @@ node_name_to_type = {
     'READ': NodeType.READ_STATEMENT,
     'RETURN': NodeType.RETURN_STATEMENT,
     'SIGN': NodeType.SIGN_OPERATOR,
+    'STATEMENT_BLOCK': NodeType.STATEMENTS,
     'STATEMENTS': NodeType.STATEMENTS,
     'TYPE': NodeType.TYPE,
     'VARIABLE_DECLARATION': NodeType.VARIABLE_DECLARATION,

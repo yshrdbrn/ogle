@@ -2,8 +2,9 @@ from enum import Enum, unique
 from ogle.semantic_analyzer.semantic_errors import *
 
 class Scope(object):
-    def __init__(self):
+    def __init__(self, identifier=None):
         self.child_identifiers = []
+        self.identifier = identifier
 
     def add_child(self, identifier):
         name = identifier.name
@@ -15,6 +16,9 @@ class Scope(object):
             if is_overload:
                 self.child_identifiers.append(identifier)
             raise DuplicateIdentifierError(identifier, is_overload)
+
+    def remove_child(self, identifier):
+        self.child_identifiers.remove(identifier)
 
     def get_child_by_name(self, name):
         found = self._find_child(name)
@@ -93,7 +97,7 @@ class Class(Identifier):
     def __init__(self, name, inherits, location):
         super().__init__(name, IdentifierType.CLASS, location)
         self.inherits = inherits
-        self.scope = Scope()
+        self.scope = Scope(self)
 
     def __str__(self):
         to_ret = f'class {self.name}'
@@ -149,7 +153,7 @@ class Function(Identifier):
         self.parameters = parameters
         self.return_type = return_type
         self.visibility = visibility
-        self.scope = Scope()
+        self.scope = Scope(self)
         self.is_defined = is_defined
 
     def __str__(self):
