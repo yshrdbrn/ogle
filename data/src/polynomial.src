@@ -23,7 +23,7 @@ class QUADRATIC inherits POLYNOMIAL {
 // ====== Function Definitions ====== //
 POLYNOMIAL::evaluate(float x) : float
   do
-    return (0);
+    return (0.0);
   end
 
 LINEAR::evaluate(float x) : float
@@ -68,15 +68,15 @@ QUADRATIC::build(float A, float B, float C) : QUADRATIC
 // ====== main ====== //
 main
   local
-    linear f1;
-    quadratic f2;
-    integer counter;
+    LINEAR f1;
+    QUADRATIC f2;
+    float counter;
   do
-    f1 = f1.build(2, 3.5);
+    f1 = f1.build(2.0, 3.5);
     f2 = f2.build(-2.0, 1.0, 0.0);
-    counter = 1;
+    counter = 1.0;
     
-    while(counter <= 10)
+    while(counter <= 10.0)
       do
         write(counter);
         write(f1.evaluate(counter));

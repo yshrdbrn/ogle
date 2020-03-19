@@ -1,16 +1,20 @@
 from enum import Enum, unique
 from ogle.semantic_analyzer.semantic_errors import *
 
+
 class Scope(object):
     def __init__(self, identifier=None):
         self.child_identifiers = []
         self.identifier = identifier
+        self.parent_scope = None
 
     def add_child(self, identifier):
         name = identifier.name
         found = self._find_child(name)
         if not found:
             self.child_identifiers.append(identifier)
+            if hasattr(identifier, 'scope'):
+                identifier.scope.parent_scope = self
         else:
             is_overload = Function.is_overload(identifier, found)
             if is_overload:
@@ -117,19 +121,30 @@ class Class(Identifier):
 
 
 class TypeValue(object):
-    def __init__(self, _type, value=None):
+    def __init__(self, _type, value=None, dimensions=None):
         self.type = _type
         self.value = value
+        self.dimensions = dimensions if dimensions else []
 
     def __str__(self):
-        if self.value:
-            return self.value
-        else:
-            return self.type.name.lower()
+        def dimensions():
+            dims_out = ''
+            for dim in self.dimensions:
+                if dim:
+                    dims_out += f'[{dim}]'
+                else:
+                    dims_out += '[]'
+            return dims_out
+
+        to_ret = self.value if self.value else self.type.name.lower()
+        to_ret += dimensions()
+        return to_ret
 
     def __eq__(self, other):
         if isinstance(other, TypeValue):
-            return self.type == other.type and self.value == other.value
+            return self.type == other.type \
+                   and self.value == other.value \
+                   and len(self.dimensions) == len(other.dimensions)
         return False
 
     @classmethod
@@ -197,9 +212,9 @@ class FunctionParameters(object):
 
         to_ret = ''
         if self.params:
-            to_ret += f'{self.params[0].type}{dimensions(self.params[0].dimensions)}'
+            to_ret += str(self.params[0].type)
             for i in range(1, len(self.params)):
-                to_ret += f', {self.params[i].type}{dimensions(self.params[i].dimensions)}'
+                to_ret += f', {self.params[i].type}'
         return to_ret
 
     def __eq__(self, other):
@@ -217,7 +232,7 @@ class Variable(Identifier):
     def __init__(self, name, var_type, dimensions, location, visibility=None):
         super().__init__(name, IdentifierType.VARIABLE, location)
         self.type = var_type
-        self.dimensions = dimensions
+        self.type.dimensions = dimensions
         self.visibility = visibility
 
     def __str__(self):
@@ -225,11 +240,6 @@ class Variable(Identifier):
         if self.visibility:
             to_ret += f'{self.visibility} '
         to_ret += f'{self.type} {self.name}'
-        for dimension in self.dimensions:
-            if dimension:
-                to_ret += f'[{dimension}]'
-            else:
-                to_ret += '[]'
         return to_ret
 
     def __repr__(self):
@@ -237,7 +247,7 @@ class Variable(Identifier):
 
     def __eq__(self, other):
         if isinstance(other, Variable):
-            return self.type == other.type and self.dimensions == other.dimensions
+            return self.type == other.type
 
 
 class SymbolTable(object):
