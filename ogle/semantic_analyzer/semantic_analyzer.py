@@ -1,6 +1,7 @@
 from ogle.semantic_analyzer.semantic_errors import *
 from ogle.semantic_analyzer.symbol_table import Type, Visibility
 from ogle.semantic_analyzer.visitors.symbol_table_visitor import SymbolTableVisitor
+from ogle.semantic_analyzer.visitors.type_checking_visitor import TypeCheckingVisitor
 
 
 class SemanticAnalyzer(object):
@@ -12,8 +13,7 @@ class SemanticAnalyzer(object):
     def analyze(self):
         self.symbol_table = self._get_symbol_table()
         self._analyze_definition_errors()
-        if not self.errors:
-            self._analyze_statement_errors()
+        self._analyze_statement_errors()
 
     def _get_symbol_table(self):
         symbol_table_visitor = SymbolTableVisitor()
@@ -29,7 +29,9 @@ class SemanticAnalyzer(object):
         self._check_shadowed_members()
 
     def _analyze_statement_errors(self):
-        pass
+        type_checking_visitor = TypeCheckingVisitor(self.symbol_table)
+        type_checking_visitor.visit(self.ast.root)
+        self.errors.extend(type_checking_visitor.errors)
 
     def _generate_error_circular_dependency(self, dependency):
         self.errors.extend(CircularDependencyChecker.errors)
@@ -52,18 +54,22 @@ class SemanticAnalyzer(object):
         for child in scope.get_classes():
             self._check_for_unknown_types(child.scope)
         for child in scope.get_functions():
-            self._check_type(child.return_type, child)
+            if not self._type_valid(child.return_type, child):
+                scope.remove_child(child)
             self._check_for_unknown_types(child.scope)
         for child in scope.get_variables():
-            self._check_type(child.type, child)
+            if not self._type_valid(child.type, child):
+                scope.remove_child(child)
 
-    def _check_type(self, t, identifier):
+    def _type_valid(self, t, identifier):
         if t.type != Type.ID:
-            return
+            return True
         try:
             self.symbol_table.global_scope.get_child_by_name(t.value)
+            return True
         except IdentifierNotFoundError:
             self.errors.append((identifier.location, f"Error: Unknown type for identifier '{identifier.name}'."))
+            return False
 
     def _check_shadowed_members(self):
         for cls in self.symbol_table.global_scope.get_classes():

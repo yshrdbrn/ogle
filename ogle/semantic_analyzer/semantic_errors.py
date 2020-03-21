@@ -11,3 +11,8 @@ class IdentifierNotFoundError(Exception):
 
 class FunctionNotFoundError(Exception):
     pass
+
+class TypeCheckingError(Exception):
+    def __init__(self, location, error_string):
+        self.location = location
+        self.error_string = error_string
