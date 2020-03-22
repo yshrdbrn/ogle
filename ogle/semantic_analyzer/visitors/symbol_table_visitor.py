@@ -193,7 +193,10 @@ class SymbolTableVisitor(object):
         # If variable has visibility
         if len(node.children) == 4:
             visibility = Visibility.visibility_from_string(node.children[0].name)
-            var_type = self.visit(node.children[1], scope)
+            if node.children[1].node_type == NodeType.TYPE:
+                var_type = self.visit(node.children[1], scope)
+            else:
+                var_type = TypeValue.type_from_string(node.children[1].value)
             name = node.children[2]
             dimensions = node.children[3]
         else:
