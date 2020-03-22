@@ -82,7 +82,7 @@ class TypeCheckingVisitor(object):
         try:
             func_identifier = self._get_function_scope(signature, scope)
             self.visit(body, func_identifier.scope)
-        except IdentifierNotFoundError:
+        except (IdentifierNotFoundError, FunctionNotFoundError):
             pass
 
     def _get_function_scope(self, signature, scope):

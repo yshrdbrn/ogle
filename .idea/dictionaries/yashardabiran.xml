@@ -2,6 +2,9 @@
   <dictionary name="yashardabiran">
     <words>
       <w>lextoken</w>
+      <w>outparseerrors</w>
+      <w>outsemanticerrors</w>
+      <w>outsymboltable</w>
       <w>qualname</w>
     </words>
   </dictionary>
