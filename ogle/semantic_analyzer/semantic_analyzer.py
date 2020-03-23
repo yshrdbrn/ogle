@@ -14,6 +14,7 @@ class SemanticAnalyzer(object):
         self.symbol_table = self._get_symbol_table()
         self._analyze_definition_errors()
         self._analyze_statement_errors()
+        self.errors.sort()
 
     def _get_symbol_table(self):
         symbol_table_visitor = SymbolTableVisitor()
@@ -22,10 +23,13 @@ class SemanticAnalyzer(object):
         return symbol_table_visitor.symbol_table
 
     def _analyze_definition_errors(self):
-        dependency = CircularDependencyChecker.check_circular_dependency(self.symbol_table)
+        cdc = CircularDependencyChecker()
+        dependency = cdc.check_circular_dependency(self.symbol_table)
+        self.errors.extend(cdc.errors)
         self._generate_error_circular_dependency(dependency)
-        self._check_undefined_functions()
+
         self._check_for_unknown_types(self.symbol_table.global_scope)
+        self._check_undefined_functions()
         self._check_shadowed_members()
 
     def _analyze_statement_errors(self):
@@ -34,7 +38,6 @@ class SemanticAnalyzer(object):
         self.errors.extend(type_checking_visitor.errors)
 
     def _generate_error_circular_dependency(self, dependency):
-        self.errors.extend(CircularDependencyChecker.errors)
         if not dependency:
             return
 
@@ -102,27 +105,28 @@ class SemanticAnalyzer(object):
         return False
 
 
-class CircularDependencyChecker:
+class CircularDependencyChecker(object):
     errors = []
 
-    @classmethod
-    def check_circular_dependency(cls, symbol_table):
+    def __init__(self):
+        self.errors = []
+
+    def check_circular_dependency(self, symbol_table):
         try:
-            adj_list = cls._build_adj_list(symbol_table)
+            adj_list = self._build_adj_list(symbol_table)
             visited = set()
             for class_name in adj_list:
                 if class_name not in visited:
                     visiting = set()
-                    result = cls._dfs(class_name, adj_list, visiting, visited)
+                    result = self._dfs(class_name, adj_list, visiting, visited)
                     # If found a circular dependency
                     if result:
                         return result
                     visited |= visiting
         except IdentifierNotFoundError as e:
-            cls.errors.append((e.location, f"Error: class '{e.requested_string}' not defined."))
+            self.errors.append((e.location, f"Error: class '{e.requested_string}' not defined."))
 
-    @classmethod
-    def _build_adj_list(cls, symbol_table):
+    def _build_adj_list(self, symbol_table):
         # dict of {'class': list of dependencies}
         adj_list = {}
 
@@ -147,8 +151,7 @@ class CircularDependencyChecker:
 
         return adj_list
 
-    @classmethod
-    def _dfs(cls, class_name, adj_list, visiting, visited):
+    def _dfs(self, class_name, adj_list, visiting, visited):
         visiting.add(class_name)
         for dependency in adj_list[class_name]:
             if dependency in visited:
@@ -157,13 +160,12 @@ class CircularDependencyChecker:
             if dependency in visiting:
                 return class_name, dependency
             else:
-                result = cls._dfs(dependency, adj_list, visiting, visited)
+                result = self._dfs(dependency, adj_list, visiting, visited)
                 if result:
                     return result
         return None
 
-    @classmethod
-    def _check_if_class_exists(cls, class_name, symbol_table, child_class_identifier):
+    def _check_if_class_exists(self, class_name, symbol_table, child_class_identifier):
         try:
             symbol_table.global_scope.get_child_by_name(class_name)
         except IdentifierNotFoundError as e:

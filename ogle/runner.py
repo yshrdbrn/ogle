@@ -27,7 +27,7 @@ def main():
             with open(file_name_no_type + '.outsymboltable', 'w') as symbol_table_file, \
                     open(file_name_no_type + '.outsemanticerrors', 'w') as error_file:
                 symbol_table_file.write(SymbolTableVisualizer(semantic_analyzer.symbol_table).visualize())
-                for error in sorted(semantic_analyzer.errors):
+                for error in semantic_analyzer.errors:
                     location = error[0]
                     error_message = error[1]
                     error_file.write(f'Line {location[0]}:{location[1]}, {error_message}\n')
