@@ -28,8 +28,8 @@ class SemanticAnalyzer(object):
         self.errors.extend(cdc.errors)
         self._generate_error_circular_dependency(dependency)
 
-        self._check_undefined_functions()
         self._check_for_unknown_types(self.symbol_table.global_scope)
+        self._check_undefined_functions()
         self._check_shadowed_members()
 
     def _analyze_statement_errors(self):

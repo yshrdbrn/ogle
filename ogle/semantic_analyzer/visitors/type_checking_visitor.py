@@ -25,6 +25,7 @@ class TypeCheckingVisitor(object):
         self._symbol_table_visitor = SymbolTableVisitor()
 
         self._access_to_private_variable = False
+        self._seen_return_statement = False
 
     # This function should never be called
     @visitor(NodeType.GENERAL)
@@ -79,9 +80,15 @@ class TypeCheckingVisitor(object):
         signature = node.children[0]
         body = node.children[1]
 
+        self._seen_return_statement = False
+
         try:
             func_identifier = self._get_function_scope(signature, scope)
             self.visit(body, func_identifier.scope)
+            if func_identifier.return_type.type != Type.VOID and not self._seen_return_statement:
+                error_message = f"Error: Function definition does not return anything. " \
+                                f"Expected '{func_identifier.return_type}'."
+                self.errors.append((func_identifier.location, error_message))
         except (IdentifierNotFoundError, FunctionNotFoundError):
             pass
 
@@ -270,11 +277,13 @@ class TypeCheckingVisitor(object):
 
     @visitor(NodeType.RETURN_STATEMENT)
     def visit(self, node, scope):
-        return_type = self.visit(node.children[0], scope)
-        if return_type.type == Type.VOID:
+        self._seen_return_statement = True
+        if scope.identifier.return_type.type == Type.VOID:
             location = node.location
             error_message = f"Error: Returning a value inside a void function."
             raise TypeCheckingError(location, error_message)
+
+        return_type = self.visit(node.children[0], scope)
         if return_type != scope.identifier.return_type:
             location = node.location
             error_message = f"Error: Incompatible return type with function return type. Expected '{return_type}', " \
