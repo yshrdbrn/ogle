@@ -116,6 +116,6 @@ main
 
 
 @pytest.mark.parametrize("input_file", input_files_with_errors)
-def test_correct_input(input_file):
+def test_symbol_table_errors(input_file):
     errors, _ = get_semantic_errors(input_file[0])
     assert len(errors) == input_file[1]
