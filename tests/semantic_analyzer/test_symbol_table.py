@@ -75,6 +75,7 @@ main
     # Circular dependency
     ('''
 class A inherits C {
+    private float a;
 };
 
 class B inherits A {

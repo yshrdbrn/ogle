@@ -9,11 +9,13 @@ class SemanticAnalyzer(object):
         self.ast = ast
         self.symbol_table = None
         self.errors = []
+        self.found_circular_dependency = False
 
     def analyze(self):
         self.symbol_table = self._get_symbol_table()
         self._analyze_definition_errors()
-        self._analyze_statement_errors()
+        if not self.found_circular_dependency:
+            self._analyze_statement_errors()
         self.errors.sort()
 
     def _get_symbol_table(self):
@@ -30,7 +32,8 @@ class SemanticAnalyzer(object):
 
         self._check_for_unknown_types(self.symbol_table.global_scope)
         self._check_undefined_functions()
-        self._check_shadowed_members()
+        if not self.found_circular_dependency:
+            self._check_shadowed_members()
 
     def _analyze_statement_errors(self):
         type_checking_visitor = TypeCheckingVisitor(self.symbol_table)
@@ -41,6 +44,7 @@ class SemanticAnalyzer(object):
         if not dependency:
             return
 
+        self.found_circular_dependency = True
         error_message = f"Error: circular dependency between classes '{dependency[0]}' and '{dependency[1]}'."
         location = self.symbol_table.global_scope.get_child_by_name(dependency[0]).location
         self.errors.append((location, error_message))
