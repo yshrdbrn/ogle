@@ -74,6 +74,8 @@ class CodeGenerator(object):
             var.offset = size_so_far
             size_so_far += var.size
 
+        func.size = size_so_far
+
     def _give_tags_to_functions(self):
         global_scope = self.symbol_table.global_scope
         for cls in global_scope.get_classes():

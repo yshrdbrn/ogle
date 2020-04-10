@@ -1,4 +1,5 @@
 import argparse
+from ogle.ast.ast import ASTVisualizer
 from ogle.code_generator.code_generator import CodeGenerator
 from ogle.lexer.lexer import Lexer
 from ogle.parser.parser import Parser
@@ -18,6 +19,7 @@ def main():
         lexer = Lexer(input_text)
         parser = Parser(lexer)
         parser.parse()
+        ASTVisualizer(parser.ast).visualize(file_name_no_type)
         if parser.errors:
             with open(file_name_no_type + '.errors', 'w') as error_file:
                 for error in parser.errors:

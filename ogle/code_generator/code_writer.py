@@ -9,7 +9,7 @@ class CodeWriter(object):
         to_write = str(tag) if tag else ''
         to_write = to_write.ljust(CodeWriter.tag_width)
         to_write += str(operation).ljust(CodeWriter.operation_width)
-        to_write += ', '.join(operands)
+        to_write += ', '.join([str(op) for op in operands])
         self.output_file.write(f'{to_write}\n')
 
     def load_word(self, ri, k, rj):
