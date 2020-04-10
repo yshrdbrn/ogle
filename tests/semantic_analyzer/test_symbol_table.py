@@ -1,5 +1,5 @@
 import pytest
-from tests.semantic_analyzer.run_compiler import get_semantic_errors
+from tests.run_compiler import get_semantic_errors
 
 # Each tuple consists of (input_file, number_of_errors)
 input_files_with_errors = [

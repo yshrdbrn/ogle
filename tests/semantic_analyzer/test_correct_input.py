@@ -1,5 +1,5 @@
 import pytest
-from tests.semantic_analyzer.run_compiler import get_semantic_errors
+from tests.run_compiler import get_semantic_errors
 
 correct_input_files = [
     '''
