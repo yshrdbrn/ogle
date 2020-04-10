@@ -76,10 +76,6 @@ class CodeGenerator(object):
             func.tag = self.tag_generator.tag_for_name(func.name)
 
 
-class CodeWriter(object):
-    pass
-
-
 class TagGenerator(object):
     def __init__(self):
         self.name_repetitions = {}
