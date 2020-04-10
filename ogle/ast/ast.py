@@ -1,6 +1,6 @@
 from collections import deque
 from graphviz import Digraph
-from ogle.parser.ast_node import Node
+from ogle.ast.ast_node import Node
 
 
 terminal_nodes = [

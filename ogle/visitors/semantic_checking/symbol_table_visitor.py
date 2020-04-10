@@ -1,6 +1,6 @@
-from ogle.parser.ast_node import NodeType
-from ogle.semantic_analyzer.symbol_table import *
-from ogle.semantic_analyzer.visitors.visitor import visitor
+from ogle.ast.ast_node import NodeType
+from ogle.symbol_table.symbol_table import *
+from ogle.visitors.visitor import visitor
 
 
 class SymbolTableVisitor(object):

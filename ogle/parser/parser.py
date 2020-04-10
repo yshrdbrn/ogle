@@ -1,6 +1,6 @@
 import os
 from ogle.parser.grammar_spec import terminals, tokens_to_terminals
-from ogle.parser.ast import AST, terminal_nodes
+from ogle.ast.ast import AST, terminal_nodes
 from ogle.parser.parse_tree import ParseTree, ParseNode
 
 

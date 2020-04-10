@@ -1,7 +1,7 @@
-from ogle.parser.ast_node import NodeType
-from ogle.semantic_analyzer.symbol_table import *
-from ogle.semantic_analyzer.visitors.symbol_table_visitor import SymbolTableVisitor
-from ogle.semantic_analyzer.visitors.visitor import visitor
+from ogle.ast.ast_node import NodeType
+from ogle.symbol_table.symbol_table import *
+from ogle.visitors.semantic_checking.symbol_table_visitor import SymbolTableVisitor
+from ogle.visitors.visitor import visitor
 
 
 def _fetch_return_type(identifier):

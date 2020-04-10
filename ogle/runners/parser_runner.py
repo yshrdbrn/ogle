@@ -1,7 +1,7 @@
 import argparse
 from ogle.lexer.lexer import Lexer
 from ogle.parser.parser import Parser
-from ogle.parser.ast import ASTVisualizer
+from ogle.ast.ast import ASTVisualizer
 
 
 def main():
