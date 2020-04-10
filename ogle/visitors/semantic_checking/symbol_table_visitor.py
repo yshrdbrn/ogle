@@ -130,6 +130,7 @@ class SymbolTableVisitor(object):
 
         for child in params_node.children:
             var = self._variable_decl(child, scope)
+            var.is_function_parameter = True
             try:
                 scope.add_child(var)
             except DuplicateIdentifierError as e:

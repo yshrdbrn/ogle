@@ -95,6 +95,9 @@ class Identifier(object):
         self.name = name
         self.identifier_type = identifier_type
         self.location = location
+        self.size = None
+        self.offset = None
+        self.tag = None
 
 
 class Class(Identifier):
@@ -109,6 +112,7 @@ class Class(Identifier):
             to_ret += f' inherits {self.inherits[0]}'
             for i in range(1, len(self.inherits)):
                 to_ret += f', {self.inherits[i]}'
+        to_ret += f' | size = {self.size}'
         return to_ret
 
     def __repr__(self):
@@ -176,6 +180,7 @@ class Function(Identifier):
         if self.visibility:
             to_ret += f'{self.visibility} '
         to_ret += f'func {self.name}({self.parameters}) returns {self.return_type}'
+        to_ret += f' | tag = {self.tag}'
         return to_ret
 
     def __repr__(self):
@@ -234,12 +239,14 @@ class Variable(Identifier):
         self.type = var_type
         self.type.dimensions = dimensions
         self.visibility = visibility
+        self.is_function_parameter = False
 
     def __str__(self):
         to_ret = ''
         if self.visibility:
             to_ret += f'{self.visibility} '
         to_ret += f'{self.type} {self.name}'
+        to_ret += f' | size = {self.size}, offset = {self.offset}'
         return to_ret
 
     def __repr__(self):
