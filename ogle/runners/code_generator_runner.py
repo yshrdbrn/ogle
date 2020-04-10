@@ -38,9 +38,10 @@ def main():
             if not only_warnings:
                 return
 
-        code_generator = CodeGenerator(semantic_analyzer.symbol_table)
-        code_generator.generate()
-        with open(file_name_no_type + '.symboltable', 'w') as symbol_table_file:
+        with open(file_name_no_type + '.symboltable', 'w') as symbol_table_file, \
+                open(file_name_no_type + '.m', 'w') as output:
+            code_generator = CodeGenerator(parser.ast, semantic_analyzer.symbol_table)
+            code_generator.generate(output)
             symbol_table_file.write(SymbolTableVisualizer(semantic_analyzer.symbol_table).visualize())
 
 

@@ -1,4 +1,6 @@
+from ogle.code_generator.code_writer import CodeWriter
 from ogle.symbol_table.symbol_table import Type
+from ogle.visitors.code_generation.code_generation_visitor import CodeGenerationVisitor
 
 
 def get_variable_size(var_type):
@@ -10,13 +12,18 @@ def get_variable_size(var_type):
 
 
 class CodeGenerator(object):
-    def __init__(self, symbol_table):
+    def __init__(self, ast, symbol_table):
+        self.ast = ast
         self.symbol_table = symbol_table
         self.tag_generator = TagGenerator()
 
-    def generate(self):
+    def generate(self, output_file):
+        # Pre-calculation
         self._calculate_identifier_sizes()
         self._give_tags_to_functions()
+
+        code_generation_visitor = CodeGenerationVisitor(self.symbol_table, CodeWriter(output_file))
+        code_generation_visitor.visit(self.ast.root)
 
     # Calculate sizes of all identifier in symbol table
     def _calculate_identifier_sizes(self):
