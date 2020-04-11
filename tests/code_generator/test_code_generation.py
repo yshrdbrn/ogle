@@ -9,15 +9,18 @@ input_files = [
 main
     local
         integer t;
+        integer y;
     do
         read(t);
-        t = t + 5;
+        t = t * 2 + 5;
+        y = 7 > 5;
+        t = t + y;
         write(t);
     end
         ''',
 
-        'input': '5',
-        'output': '10'
+        'input': '12',
+        'output': '30'
     }
 ]
 
