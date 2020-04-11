@@ -13,9 +13,7 @@ class CodeGenerationVisitor(object):
     def visit(self, node, scope):
         assert False
 
-    @visitor(NodeType.ADD_OPERATOR)
-    def visit(self, node, scope):
-        self.code_writer.comment('add operator')
+    def _binary_operator(self, node, scope):
         self.visit(node.children[0], scope)
         self.code_writer.operation('addi', 'r13', 'r13', -8)
         self.visit(node.children[1], scope)
@@ -23,6 +21,12 @@ class CodeGenerationVisitor(object):
 
         self.code_writer.load_word('r1', -4, 'r13')
         self.code_writer.load_word('r2', -12, 'r13')
+
+    @visitor(NodeType.ADD_OPERATOR)
+    def visit(self, node, scope):
+        self.code_writer.comment('add operator')
+        self._binary_operator(node, scope)
+
         if node.value == '+':
             self.code_writer.operation('add', 'r1', 'r1', 'r2')
         elif node.value == '-':
@@ -44,6 +48,25 @@ class CodeGenerationVisitor(object):
         self.code_writer.load_word('r1', -12, 'r13')
         self.code_writer.load_word('r2', -8, 'r13')
         self.code_writer.store_word(0, 'r2', 'r1')
+
+    @visitor(NodeType.COMPARE_OPERATOR)
+    def visit(self, node, scope):
+        self.code_writer.comment('compare operator')
+        self._binary_operator(node, scope)
+
+        if node.value == '<':
+            self.code_writer.operation('clt', 'r1', 'r1', 'r2')
+        elif node.value == '>':
+            self.code_writer.operation('cgt', 'r1', 'r1', 'r2')
+        elif node.value == '<=':
+            self.code_writer.operation('cle', 'r1', 'r1', 'r2')
+        elif node.value == '>=':
+            self.code_writer.operation('cge', 'r1', 'r1', 'r2')
+        elif node.value == '==':
+            self.code_writer.operation('ceq', 'r1', 'r1', 'r2')
+        else:  # node.value == '<>'
+            self.code_writer.operation('cne', 'r1', 'r1', 'r2')
+        self.code_writer.store_word(-4, 'r13', 'r1')
 
     @visitor(NodeType.FUNCTION_BODY)
     def visit(self, node, scope):
@@ -105,13 +128,8 @@ class CodeGenerationVisitor(object):
     @visitor(NodeType.MULT_OPERATOR)
     def visit(self, node, scope):
         self.code_writer.comment('mult operator')
-        self.visit(node.children[0], scope)
-        self.code_writer.operation('addi', 'r13', 'r13', -8)
-        self.visit(node.children[1], scope)
-        self.code_writer.operation('addi', 'r13', 'r13', 8)
+        self._binary_operator(node, scope)
 
-        self.code_writer.load_word('r1', -4, 'r13')
-        self.code_writer.load_word('r2', -12, 'r13')
         if node.value == '*':
             self.code_writer.operation('mul', 'r1', 'r1', 'r2')
         elif node.value == '/':
@@ -120,6 +138,15 @@ class CodeGenerationVisitor(object):
             self.code_writer.operation('cgt', 'r1', 'r1', 'r0')
             self.code_writer.operation('cgt', 'r2', 'r2', 'r0')
             self.code_writer.operation('and', 'r1', 'r1', 'r2')
+        self.code_writer.store_word(-4, 'r13', 'r1')
+
+    @visitor(NodeType.NOT_OPERATOR)
+    def visit(self, node, scope):
+        self.code_writer.comment('mult operator')
+        self.visit(node.children[1], scope)
+        self.code_writer.load_word('r1', -4, 'r13')
+        self.code_writer.operation('cgt', 'r1', 'r1', 'r0')
+        self.code_writer.operation('cq', 'r1', 'r1', 'r0')
         self.code_writer.store_word(-4, 'r13', 'r1')
 
     @visitor(NodeType.PROGRAM)
