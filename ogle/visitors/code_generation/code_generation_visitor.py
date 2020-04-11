@@ -91,6 +91,7 @@ class CodeGenerationVisitor(object):
         self.code_writer.operation('j', if_tag_end)
         # Else statement
         self.code_writer.operation('nop', tag=if_tag_else)
+        self.visit(node.children[2], scope)
         # End of if statement
         self.code_writer.operation('nop', tag=if_tag_end)
 

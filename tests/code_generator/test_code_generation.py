@@ -21,6 +21,35 @@ main
 
         'input': '12',
         'output': '30'
+    },
+
+{
+        'code': '''
+main
+    local
+        integer a;
+        integer b;
+    do
+        a = 10;
+        if (a < 5)
+            then
+                a = 20;
+            else
+                a = 5;
+        ;
+        
+        b = 1;
+        while (a > 0)
+            do
+                b = b * 2;
+                a = a - 1;
+            end;
+        write(b);
+    end
+        ''',
+
+        'input': '0',
+        'output': '32'
     }
 ]
 
