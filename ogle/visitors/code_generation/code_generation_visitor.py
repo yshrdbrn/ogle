@@ -4,9 +4,10 @@ from ogle.symbol_table.symbol_table import *
 from ogle.visitors.visitor import visitor
 
 class CodeGenerationVisitor(object):
-    def __init__(self, symbol_table, code_writer):
+    def __init__(self, symbol_table, code_writer, tag_generator):
         self.symbol_table = symbol_table
         self.code_writer = code_writer
+        self.tag_generator = tag_generator
 
 # This function should never be called
     @visitor(NodeType.GENERAL)
@@ -72,6 +73,26 @@ class CodeGenerationVisitor(object):
     def visit(self, node, scope):
         statements = node.children[1]
         self.visit(statements, scope)
+
+    @visitor(NodeType.IF_STATEMENT)
+    def visit(self, node, scope):
+        if_tag = self.tag_generator.tag_for_name('if')
+        if_tag_else = if_tag + '_else'
+        if_tag_end = if_tag + '_end'
+
+        self.code_writer.comment('If statement')
+        self.code_writer.operation('nop', tag=if_tag)
+        # Get the condition value
+        self.visit(node.children[0], scope)
+        # Check the condition
+        self.code_writer.operation('bz', 'r1', if_tag_else)
+        # Then statement
+        self.visit(node.children[1], scope)
+        self.code_writer.operation('j', if_tag_end)
+        # Else statement
+        self.code_writer.operation('nop', tag=if_tag_else)
+        # End of if statement
+        self.code_writer.operation('nop', tag=if_tag_end)
 
     @visitor(NodeType.INT_NUM)
     def visit(self, node, scope):
@@ -180,6 +201,23 @@ class CodeGenerationVisitor(object):
             self.code_writer.empty_line()
             self.code_writer.operation('subi', 'r13', 'r14', scope.identifier.size)
             self.visit(child, scope)
+
+    @visitor(NodeType.WHILE_STATEMENT)
+    def visit(self, node, scope):
+        while_tag = self.tag_generator.tag_for_name('while')
+        while_tag_end = while_tag + '_end'
+
+        self.code_writer.comment('While statement')
+        self.code_writer.operation('nop', tag=while_tag)
+        # Compute the condition
+        self.visit(node.children[0], scope)
+        # Evaluate the condition
+        self.code_writer.operation('bz', 'r1', while_tag_end)
+        # Execute the statements
+        self.visit(node.children[1], scope)
+        # Jump back to the beginning of while statement
+        self.code_writer.operation('j', while_tag)
+        self.code_writer.operation('nop', tag=while_tag_end)
 
     @visitor(NodeType.WRITE_STATEMENT)
     def visit(self, node, scope):

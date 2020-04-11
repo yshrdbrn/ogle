@@ -22,7 +22,7 @@ class CodeGenerator(object):
         self._calculate_identifier_sizes()
         self._give_tags_to_functions()
 
-        code_generation_visitor = CodeGenerationVisitor(self.symbol_table, CodeWriter(output_file))
+        code_generation_visitor = CodeGenerationVisitor(self.symbol_table, CodeWriter(output_file), self.tag_generator)
         code_generation_visitor.visit(self.ast.root)
 
     # Calculate sizes of all identifier in symbol table
