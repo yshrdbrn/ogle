@@ -1,6 +1,6 @@
 from collections import deque
 from graphviz import Digraph
-from ogle.parser.ast_node import Node
+from ogle.ast.ast_node import Node
 
 
 terminal_nodes = [
@@ -131,7 +131,7 @@ class ASTVisualizer(object):
         self.dot.render(filename=input_file_name + '_AST.gv')
 
     def _add_nodes(self, root):
-        self.dot.node(root.unique_id, root.value)
+        self.dot.node(root.unique_id, root.value if root.value != '<>' else '"<>"')
         for child in root.children:
             self._add_nodes(child)
 

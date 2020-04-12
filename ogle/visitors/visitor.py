@@ -1,4 +1,4 @@
-from ogle.parser.ast_node import NodeType
+from ogle.ast.ast_node import NodeType
 
 
 # Helper functions

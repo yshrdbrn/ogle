@@ -1,6 +1,6 @@
-from ogle.parser.ast_node import NodeType
-from ogle.semantic_analyzer.symbol_table import *
-from ogle.semantic_analyzer.visitors.visitor import visitor
+from ogle.ast.ast_node import NodeType
+from ogle.symbol_table.symbol_table import *
+from ogle.visitors.visitor import visitor
 
 
 class SymbolTableVisitor(object):
@@ -130,6 +130,7 @@ class SymbolTableVisitor(object):
 
         for child in params_node.children:
             var = self._variable_decl(child, scope)
+            var.is_function_parameter = True
             try:
                 scope.add_child(var)
             except DuplicateIdentifierError as e:

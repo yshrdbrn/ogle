@@ -1,7 +1,7 @@
 from ogle.semantic_analyzer.semantic_errors import *
-from ogle.semantic_analyzer.symbol_table import Type, Visibility
-from ogle.semantic_analyzer.visitors.symbol_table_visitor import SymbolTableVisitor
-from ogle.semantic_analyzer.visitors.type_checking_visitor import TypeCheckingVisitor
+from ogle.symbol_table.symbol_table import Type, Visibility
+from ogle.visitors.semantic_checking.symbol_table_visitor import SymbolTableVisitor
+from ogle.visitors.semantic_checking.type_checking_visitor import TypeCheckingVisitor
 
 
 class SemanticAnalyzer(object):

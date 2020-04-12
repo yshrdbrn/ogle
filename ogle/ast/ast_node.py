@@ -48,6 +48,7 @@ class Node(object):
         self.value = value if value else name
         self.location = location
         self.children = deque()
+        self.identifier = None
         self.unique_id = str(Node.counter)
         Node.counter += 1
 

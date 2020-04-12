@@ -2,7 +2,7 @@ import argparse
 from ogle.lexer.lexer import Lexer
 from ogle.parser.parser import Parser
 from ogle.semantic_analyzer.semantic_analyzer import SemanticAnalyzer
-from ogle.semantic_analyzer.symbol_table import SymbolTableVisualizer
+from ogle.symbol_table.symbol_table import SymbolTableVisualizer
 
 
 def main():
