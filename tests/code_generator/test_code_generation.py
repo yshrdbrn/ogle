@@ -4,6 +4,8 @@ import subprocess
 from tests.run_compiler import run
 
 input_files = [
+    # Integer arithmetic
+    # Read and Write statements
     {
         'code': '''
 main
@@ -23,7 +25,8 @@ main
         'output': '30'
     },
 
-{
+    # If and while statements
+    {
         'code': '''
 main
     local
@@ -50,6 +53,62 @@ main
 
         'input': '0',
         'output': '32'
+    },
+
+    #
+    # Functions
+    #
+
+    # Multiple function calls
+    {
+        'code': '''
+f1(integer x): integer
+    local
+    do
+        return (x * 2);
+    end
+    
+f2(integer x): integer
+    local
+    do
+        return (x + 2);
+    end
+
+main
+    local
+        integer x;
+    do
+        write(f1(f2(-5)));
+    end
+        ''',
+
+        'input': '0',
+        'output': '-6'
+    },
+
+    # Recursive function
+    {
+        'code': '''
+factorial(integer x): integer
+    local
+    do
+        if (x == 1)
+            then
+                return (1);
+            else
+                return (factorial(x - 1) * x);
+        ;
+    end
+    
+main
+    local
+    do
+        write(factorial(5));
+    end
+        ''',
+
+        'input': '0',
+        'output': '120'
     }
 ]
 
@@ -60,15 +119,16 @@ def directory_with_moon(tmp_path_factory):
     moon_code = moon_dir.joinpath('moon.c')
     subprocess.run(['gcc', moon_code, '-o', str(tmp_dir.joinpath('moon.out'))], stderr=subprocess.DEVNULL)
     subprocess.run(['cp', moon_dir.joinpath('util.m'), tmp_dir])
+    subprocess.run(['cp', moon_dir.joinpath('util_2.m'), tmp_dir])
     return tmp_dir
 
 @pytest.mark.parametrize("input_file", input_files)
 def test_sample(directory_with_moon, input_file):
     d = directory_with_moon
     run(input_file['code'], str(d.joinpath('file.m')))
-    out = subprocess.run(['./moon.out', 'file.m', 'util.m'],
+    out = subprocess.run(['./moon.out', 'file.m', 'util.m', 'util_2.m'],
                          cwd=str(d),
                          capture_output=True,
                          input=bytes(input_file['input'], 'utf-8'))\
         .stdout.decode("utf-8")
-    assert out.splitlines()[2] == input_file['output']
+    assert out.splitlines()[3] == input_file['output']

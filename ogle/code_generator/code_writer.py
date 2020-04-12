@@ -1,5 +1,5 @@
 class CodeWriter(object):
-    tag_width = 13
+    tag_width = 20
     operation_width = 7
 
     def __init__(self, output_file):

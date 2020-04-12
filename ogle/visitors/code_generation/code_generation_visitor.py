@@ -3,6 +3,11 @@ from ogle.ast.ast_node import NodeType
 from ogle.symbol_table.symbol_table import *
 from ogle.visitors.visitor import visitor
 
+
+# Registers to save in stack when calling a subroutine
+important_registers = ['r15', 'r14', 'r13']
+
+
 class CodeGenerationVisitor(object):
     def __init__(self, symbol_table, code_writer, tag_generator):
         self.symbol_table = symbol_table
@@ -74,6 +79,55 @@ class CodeGenerationVisitor(object):
         statements = node.children[1]
         self.visit(statements, scope)
 
+    @visitor(NodeType.FUNCTION_CALL)
+    def visit(self, node, scope):
+        self.visit(node.children[0], scope)
+
+    @visitor(NodeType.FUNCTION_CALL_PARAMETERS)
+    def visit(self, node, scope):
+        number_of_bytes_moved = 0
+        self.code_writer.comment('writing function parameters')
+        for child in node.children:
+            self.visit(child, scope)
+            self.code_writer.operation('subi', 'r13', 'r13', 4)
+            number_of_bytes_moved += 4
+        self.code_writer.operation('addi', 'r13', 'r13', number_of_bytes_moved)
+
+    @visitor(NodeType.FUNCTION_DEFINITION)
+    def visit(self, node, scope):
+        body = node.children[1]
+
+        assert node.identifier
+        func_identifier = node.identifier
+        # Define the function
+        self.code_writer.empty_line()
+        self.code_writer.operation('nop', tag=func_identifier.tag)
+        # Store all registers
+        self.code_writer.comment('store all important registers in stack')
+        for index, register in enumerate(important_registers):
+            self.code_writer.store_word(-4 * (index + 1), 'r13', register)
+        # Update r14
+        self.code_writer.operation('subi', 'r14', 'r13', len(important_registers) * 4)
+
+        self.visit(body, func_identifier.scope)
+
+        self.code_writer.operation('nop', tag=func_identifier.tag+'_end')
+        self.code_writer.operation('addi', 'r13', 'r14', len(important_registers) * 4)
+        # Restore all registers
+        self.code_writer.comment('restore important registers')
+        for index, register in enumerate(important_registers):
+            self.code_writer.load_word(register, -4 * (index + 1), 'r13')
+        if func_identifier.return_type.type != Type.VOID:
+            # Copy the return value to r13 address
+            self.code_writer.comment('copy the return value')
+            self.code_writer.operation('add', 'r1', 'r12', 'r0')
+            self.code_writer.operation('add', 'r2', 'r13', 'r0')
+            # TODO Change the size from 1 to the returned object size
+            self.code_writer.operation('addi', 'r3', 'r0', 1)
+            self.code_writer.operation('jl', 'r10', 'copybytes')
+
+        self.code_writer.operation('jr', 'r15')
+
     @visitor(NodeType.IF_STATEMENT)
     def visit(self, node, scope):
         if_tag = self.tag_generator.tag_for_name('if')
@@ -114,8 +168,23 @@ class CodeGenerationVisitor(object):
 
     @visitor(NodeType.ITEM)
     def visit(self, node, scope):
-        identifier = scope.get_child_by_name(node.children[0].value)
-        self.code_writer.comment(f'identifier {identifier.name}')
+        assert node.identifier
+        identifier = node.identifier
+        if isinstance(identifier, Function):
+            self._handle_function(node, scope)
+        else:
+            self._handle_variable(node, scope)
+
+    def _handle_function(self, node, scope):
+        self.code_writer.comment(f'Calling function {node.identifier.name}')
+        self.code_writer.operation('subi', 'r13', 'r13', len(important_registers) * 4)
+        self.visit(node.children[1], scope)
+        self.code_writer.operation('addi', 'r13', 'r13', len(important_registers) * 4)
+        self.code_writer.operation('jl', 'r15', node.identifier.tag)
+
+    def _handle_variable(self, node, scope):
+        identifier = node.identifier
+        self.code_writer.comment(f'variable {identifier.name}')
         # Value of variable
         self.code_writer.load_word('r1', -(identifier.size + identifier.offset), 'r14')
         # Address of variable
@@ -187,6 +256,15 @@ class CodeGenerationVisitor(object):
         self.code_writer.operation('jl', 'r15', 'getint')
         self.code_writer.load_word('r2', -8, 'r13')
         self.code_writer.store_word(0, 'r2', 'r1')
+
+    @visitor(NodeType.RETURN_STATEMENT)
+    def visit(self, node, scope):
+        end_of_func_tag = scope.identifier.tag + '_end'
+        self.code_writer.comment('Return statement')
+        self.visit(node.children[0], scope)
+        self.code_writer.comment('Store return value address in r12')
+        self.code_writer.operation('add', 'r12', 'r13', 'r0')
+        self.code_writer.operation('j', end_of_func_tag)
 
     @visitor(NodeType.SIGN_OPERATOR)
     def visit(self, node, scope):

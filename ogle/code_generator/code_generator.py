@@ -80,9 +80,9 @@ class CodeGenerator(object):
         global_scope = self.symbol_table.global_scope
         for cls in global_scope.get_classes():
             for func in cls.scope.get_functions():
-                func.tag = self.tag_generator.tag_for_name(func.name)
+                func.tag = self.tag_generator.tag_for_func()
         for func in global_scope.get_functions():
-            func.tag = self.tag_generator.tag_for_name(func.name)
+            func.tag = self.tag_generator.tag_for_func()
 
 
 class TagGenerator(object):
@@ -96,3 +96,7 @@ class TagGenerator(object):
         else:
             self.name_repetitions[name] = 1
             return f'{name}_1'
+
+    def tag_for_func(self):
+        return self.tag_for_name('func')
+
