@@ -149,6 +149,28 @@ class CodeGenerationVisitor(object):
         # End of if statement
         self.code_writer.operation('nop', tag=if_tag_end)
 
+    @visitor(NodeType.INDICES)
+    def visit(self, node, scope):
+        identifier = node.identifier
+        dims = [int(dim) for dim in identifier.type.dimensions]
+        self.code_writer.operation('subi', 'r13', 'r13', 8)
+        for index, child in enumerate(node.children):
+            self.visit(child, scope)
+            self.code_writer.comment(f'calculating variable address after index {index}')
+            # TODO objects: move forward number number of size instead of 4
+            if index != len(dims) - 1:
+                sub_array_size = sum(dims[index+1:])
+                self.code_writer.operation('addi', 'r1', 'r0', sub_array_size)
+                self.code_writer.load_word('r2', -4, 'r13')
+                self.code_writer.operation('mul', 'r1', 'r1', 'r2')
+            else:  # index == len(dims) -1
+                self.code_writer.load_word('r1', -4, 'r13')
+            self.code_writer.operation('muli', 'r1', 'r1', 4)
+            self.code_writer.load_word('r3', 0, 'r13')
+            self.code_writer.operation('add', 'r3', 'r3', 'r1')
+            self.code_writer.store_word(0, 'r13', 'r3')
+        self.code_writer.operation('addi', 'r13', 'r13', 8)
+
     @visitor(NodeType.INT_NUM)
     def visit(self, node, scope):
         val = int(node.value)
@@ -185,12 +207,21 @@ class CodeGenerationVisitor(object):
     def _handle_variable(self, node, scope):
         identifier = node.identifier
         self.code_writer.comment(f'variable {identifier.name}')
-        # Value of variable
-        self.code_writer.load_word('r1', -(identifier.size + identifier.offset), 'r14')
-        # Address of variable
-        self.code_writer.operation('addi', 'r2', 'r14', -(identifier.size + identifier.offset))
-        self.code_writer.store_word(-4, 'r13', 'r1')
-        self.code_writer.store_word(-8, 'r13', 'r2')
+        # Store the variable address in stack
+        self.code_writer.operation('addi', 'r1', 'r14', -(identifier.size + identifier.offset))
+        self.code_writer.store_word(-8, 'r13', 'r1')
+
+        # If variable has indices
+        if len(node.children) == 2:
+            # Check the indices
+            indices_node = node.children[1]
+            indices_node.identifier = identifier
+            self.visit(indices_node, scope)
+
+        # Store the value of the variable
+        self.code_writer.load_word('r1', -8, 'r13')
+        self.code_writer.load_word('r2', 0, 'r1')
+        self.code_writer.store_word(-4, 'r13', 'r2')
 
     @visitor(NodeType.ITEM_LIST)
     def visit(self, node, scope):

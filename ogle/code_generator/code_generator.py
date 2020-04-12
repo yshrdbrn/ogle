@@ -3,7 +3,9 @@ from ogle.symbol_table.symbol_table import Type
 from ogle.visitors.code_generation.code_generation_visitor import CodeGenerationVisitor
 
 
-def get_variable_size(var_type):
+def get_variable_size(var):
+    # TODO Define the variable size based on the object size
+    var_type = var.type
     no_of_variables = 1
     for dim in var_type.dimensions:
         if dim:
@@ -42,7 +44,7 @@ class CodeGenerator(object):
         # Calculate all variable sizes
         for var in cls.scope.get_variables():
             if var.type.type != Type.ID:
-                var.size = get_variable_size(var.type)
+                var.size = get_variable_size(var)
             else:
                 class_id = global_scope.get_child_by_name(var.type.value)
                 if not class_id.size:
@@ -66,7 +68,7 @@ class CodeGenerator(object):
         size_so_far = 0
         for var in func.scope.get_variables():
             if var.type.type != Type.ID:
-                var.size = get_variable_size(var.type)
+                var.size = get_variable_size(var)
             else:
                 class_id = global_scope.get_child_by_name(var.type.value)
                 var.size = class_id.size
