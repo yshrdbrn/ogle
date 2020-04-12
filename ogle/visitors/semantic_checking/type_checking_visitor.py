@@ -83,16 +83,16 @@ class TypeCheckingVisitor(object):
         self._seen_return_statement = False
 
         try:
-            func_identifier = self._get_function_scope(signature, scope)
-            self.visit(body, func_identifier.scope)
-            if func_identifier.return_type.type != Type.VOID and not self._seen_return_statement:
+            node.identifier = self._get_function_identifier(signature, scope)
+            self.visit(body, node.identifier.scope)
+            if node.identifier.return_type.type != Type.VOID and not self._seen_return_statement:
                 error_message = f"Error: Function definition does not return anything. " \
-                                f"Expected '{func_identifier.return_type}'."
-                self.errors.append((func_identifier.location, error_message))
+                                f"Expected '{node.identifier.return_type}'."
+                self.errors.append((node.identifier.location, error_message))
         except (IdentifierNotFoundError, FunctionNotFoundError):
             pass
 
-    def _get_function_scope(self, signature, scope):
+    def _get_function_identifier(self, signature, scope):
         if len(signature.children) == 3:
             name = signature.children[0].value
             params = self._symbol_table_visitor.visit(signature.children[1], scope)
@@ -142,9 +142,9 @@ class TypeCheckingVisitor(object):
 
         try:
             if isinstance(new_scope.identifier, Function):
-                return self._type_of_identifier(identifier, new_scope), location
+                return self._type_of_identifier(identifier, new_scope, node), location
             else:
-                return self._type_of_identifier_in_class(identifier, new_scope.identifier.name), location
+                return self._type_of_identifier_in_class(identifier, new_scope.identifier.name, node), location
         except (IdentifierNotFoundError, FunctionNotFoundError):
             error_message = f"Error: Unknown identifier '{name}'."
             raise TypeCheckingError(location, error_message)
@@ -167,9 +167,9 @@ class TypeCheckingVisitor(object):
         # Find the variable
         try:
             if isinstance(new_scope.identifier, Function):
-                returned_type = self._type_of_identifier(name, new_scope)
+                returned_type = self._type_of_identifier(name, new_scope, node)
             else:
-                returned_type = self._type_of_identifier_in_class(name, new_scope.identifier.name)
+                returned_type = self._type_of_identifier_in_class(name, new_scope.identifier.name, node)
         except (IdentifierNotFoundError, FunctionNotFoundError):
             error_message = f"Error: Unknown identifier '{name}'."
             raise TypeCheckingError(location, error_message)
@@ -185,10 +185,11 @@ class TypeCheckingVisitor(object):
         returned_type = TypeValue(returned_type.type, returned_type.value)
         return returned_type, location
 
-    def _type_of_identifier(self, identifier, scope):
+    def _type_of_identifier(self, identifier, scope, node):
         # Search in function scope
         try:
-            return _fetch_return_type(_find_in_scope(identifier, scope))
+            node.identifier = _find_in_scope(identifier, scope)
+            return _fetch_return_type(node.identifier)
         except (IdentifierNotFoundError, FunctionNotFoundError):
             pass
 
@@ -198,7 +199,7 @@ class TypeCheckingVisitor(object):
             self._access_to_private_variable = True
             class_name = scope.identifier.name
             try:
-                return self._type_of_identifier_in_class(identifier, class_name)
+                return self._type_of_identifier_in_class(identifier, class_name, node)
             except (IdentifierNotFoundError, FunctionNotFoundError):
                 pass
             # Not found in class. Set the scope to global scope
@@ -206,9 +207,10 @@ class TypeCheckingVisitor(object):
 
         # Search in global scope
         # Might raise IdentifierNotFoundError
-        return _fetch_return_type(_find_in_scope(identifier, scope))
+        node.identifier = _find_in_scope(identifier, scope)
+        return _fetch_return_type(node.identifier)
 
-    def _type_of_identifier_in_class(self, identifier, class_name):
+    def _type_of_identifier_in_class(self, identifier, class_name, node):
         cls = self.symbol_table.global_scope.get_child_by_name(class_name)
 
         # Check the child identifiers in cls
@@ -216,6 +218,7 @@ class TypeCheckingVisitor(object):
             child = _find_in_scope(identifier, cls.scope)
             if child.visibility == Visibility.PUBLIC or self._access_to_private_variable:
                 self._access_to_private_variable = False
+                node.identifier = child
                 return _fetch_return_type(child)
         except (IdentifierNotFoundError, FunctionNotFoundError):
             pass
@@ -223,7 +226,7 @@ class TypeCheckingVisitor(object):
         # Call the parents to see if identifier exists
         for parent in cls.inherits:
             try:
-                return self._type_of_identifier_in_class(identifier, parent)
+                return self._type_of_identifier_in_class(identifier, parent, node)
             except (IdentifierNotFoundError, FunctionNotFoundError):
                 pass
 
@@ -249,8 +252,8 @@ class TypeCheckingVisitor(object):
 
     @visitor(NodeType.MAIN)
     def visit(self, node, scope):
-        main_function_identifier = Function('main', FunctionParameters(), None, None)
-        scope = scope.get_child_by_identifier(main_function_identifier).scope
+        node.identifier = Function('main', FunctionParameters(), None, None)
+        scope = scope.get_child_by_identifier(node.identifier).scope
         body = node.children[0]
         self.visit(body, scope)
 
