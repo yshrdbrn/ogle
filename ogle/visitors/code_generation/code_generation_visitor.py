@@ -85,10 +85,17 @@ class CodeGenerationVisitor(object):
 
     @visitor(NodeType.FUNCTION_CALL_PARAMETERS)
     def visit(self, node, scope):
+        identifier = node.identifier
+        params = identifier.parameters.params
         number_of_bytes_moved = 0
         self.code_writer.comment('writing function parameters')
-        for child in node.children:
+        for index, child in enumerate(node.children):
             self.visit(child, scope)
+            # If parameter was array type
+            if params[index].type.dimensions:
+                # Replace the address with the value
+                self.code_writer.load_word('r1', -8, 'r13')
+                self.code_writer.store_word(-4, 'r13', 'r1')
             self.code_writer.operation('subi', 'r13', 'r13', 4)
             number_of_bytes_moved += 4
         self.code_writer.operation('addi', 'r13', 'r13', number_of_bytes_moved)
@@ -152,7 +159,11 @@ class CodeGenerationVisitor(object):
     @visitor(NodeType.INDICES)
     def visit(self, node, scope):
         identifier = node.identifier
-        dims = [int(dim) for dim in identifier.type.dimensions]
+
+        dims = [0 for i in range(len(identifier.type.dimensions))]
+        for i in range(1, len(identifier.type.dimensions)):
+            dims[i] = int(identifier.type.dimensions[i])
+
         self.code_writer.operation('subi', 'r13', 'r13', 8)
         for index, child in enumerate(node.children):
             self.visit(child, scope)
@@ -200,6 +211,7 @@ class CodeGenerationVisitor(object):
     def _handle_function(self, node, scope):
         self.code_writer.comment(f'Calling function {node.identifier.name}')
         self.code_writer.operation('subi', 'r13', 'r13', len(important_registers) * 4)
+        node.children[1].identifier = node.identifier
         self.visit(node.children[1], scope)
         self.code_writer.operation('addi', 'r13', 'r13', len(important_registers) * 4)
         self.code_writer.operation('jl', 'r15', node.identifier.tag)
@@ -208,7 +220,12 @@ class CodeGenerationVisitor(object):
         identifier = node.identifier
         self.code_writer.comment(f'variable {identifier.name}')
         # Store the variable address in stack
-        self.code_writer.operation('addi', 'r1', 'r14', -(identifier.size + identifier.offset))
+        if identifier.is_function_parameter and identifier.type.dimensions:
+            # If the variable is a function parameter and an array type,
+            # its value is the address of the variable
+            self.code_writer.load_word('r1', -(identifier.size + identifier.offset), 'r14')
+        else:
+            self.code_writer.operation('addi', 'r1', 'r14', -(identifier.size + identifier.offset))
         self.code_writer.store_word(-8, 'r13', 'r1')
 
         # If variable has indices

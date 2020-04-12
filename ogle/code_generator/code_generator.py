@@ -7,9 +7,10 @@ def get_variable_size(var):
     # TODO Define the variable size based on the object size
     var_type = var.type
     no_of_variables = 1
-    for dim in var_type.dimensions:
-        if dim:
-            no_of_variables *= int(dim)
+    if not var.is_function_parameter:
+        for dim in var_type.dimensions:
+            if dim:
+                no_of_variables *= int(dim)
     return no_of_variables * 4
 
 
@@ -101,4 +102,3 @@ class TagGenerator(object):
 
     def tag_for_func(self):
         return self.tag_for_name('func')
-

@@ -25,7 +25,9 @@ main
         'output': '30'
     },
 
+    #
     # If and while statements
+    #
     {
         'code': '''
 main
@@ -109,6 +111,45 @@ main
 
         'input': '0',
         'output': '120'
+    },
+
+    #
+    # Arrays
+    #
+    {
+        'code': '''
+func(integer arr[][11]): integer
+    local
+    do
+        // Array is passed by reference
+        arr[1][1] = 10;
+        return(arr[8][9]);
+    end
+
+main
+    local
+        integer t[11][11];
+        integer i;
+        integer j;
+    do
+        i = 1;
+        while (i <= 10)
+        do
+            j = 1;
+            while (j <= 10)
+            do
+                t[i][j] = i * j;
+                j = j + 1;
+            end;
+            i = i + 1;
+        end;
+
+        write(func(t) + t[1][1]);
+    end
+        ''',
+
+        'input': '0',
+        'output': '82'
     }
 ]
 
