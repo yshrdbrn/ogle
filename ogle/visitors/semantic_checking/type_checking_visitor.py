@@ -44,7 +44,10 @@ class TypeCheckingVisitor(object):
 
     @visitor(NodeType.ADD_OPERATOR)
     def visit(self, node, scope):
-        return self._handle_lhs_rhs(node, scope)
+        lhs = self._handle_lhs_rhs(node, scope)
+        if lhs.type == Type.ID:
+            raise TypeCheckingError(node.location, f"Error: Arithmetic operation on class type {lhs}")
+        return lhs
 
     @visitor(NodeType.ASSIGN_STATEMENT)
     def visit(self, node, scope):
@@ -52,7 +55,10 @@ class TypeCheckingVisitor(object):
 
     @visitor(NodeType.COMPARE_OPERATOR)
     def visit(self, node, scope):
-        return self._handle_lhs_rhs(node, scope)
+        lhs = self._handle_lhs_rhs(node, scope)
+        if lhs.type == Type.ID:
+            raise TypeCheckingError(node.location, f"Error: Arithmetic operation on class type {lhs}")
+        return lhs
 
     @visitor(NodeType.FLOAT_NUM)
     def visit(self, node, scope):
@@ -259,7 +265,10 @@ class TypeCheckingVisitor(object):
 
     @visitor(NodeType.MULT_OPERATOR)
     def visit(self, node, scope):
-        return self._handle_lhs_rhs(node, scope)
+        lhs = self._handle_lhs_rhs(node, scope)
+        if lhs.type == Type.ID:
+            raise TypeCheckingError(node.location, f"Error: Arithmetic operation on class type {lhs}")
+        return lhs
 
     @visitor(NodeType.NOT_OPERATOR)
     def visit(self, node, scope):

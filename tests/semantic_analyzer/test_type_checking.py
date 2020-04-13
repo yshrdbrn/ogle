@@ -110,6 +110,8 @@ func() : A
     local
         A a;
     do
+        // object arithmetic is not allowed
+        a = a + a;
         return (a);
     end
 
@@ -129,7 +131,7 @@ main
         // correct call
         y = func().public_func();
     end
-''', 2),
+''', 3),
 ]
 
 @pytest.mark.parametrize("input_file", type_checking_errors)
