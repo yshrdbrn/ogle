@@ -73,6 +73,16 @@ class Scope(object):
                 return var
         return None
 
+    def add_visible_function(self, func):
+        self.visible_functions.append(func)
+
+    def get_visible_function(self, func):
+        for child in self.visible_functions:
+            if child == func:
+                return child
+        return None
+
+
 @unique
 class Type(Enum):
     VOID = 1
@@ -121,6 +131,7 @@ class Class(Identifier):
         super().__init__(name, IdentifierType.CLASS, location)
         self.inherits = inherits
         self.scope = Scope(self)
+        self.size_of_just_self = None
 
     def __str__(self):
         to_ret = f'class {self.name}'
@@ -207,6 +218,9 @@ class Function(Identifier):
             return self.name == other.name and self.parameters == other.parameters
         return False
 
+    def has_namespace(self):
+        return self.scope.parent_scope.identifier is not None
+
     @classmethod
     def is_overload(cls, func1, func2):
         if isinstance(func1, Function) and isinstance(func2, Function):
@@ -256,6 +270,7 @@ class Variable(Identifier):
         self.type.dimensions = dimensions
         self.visibility = visibility
         self.is_function_parameter = False
+        self.is_namespace_variable = False
 
     def __str__(self):
         to_ret = ''

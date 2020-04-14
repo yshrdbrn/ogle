@@ -27,7 +27,7 @@ class CodeGenerator(object):
         # Pre-calculation
         self._calculate_identifier_sizes()
         self._give_tags_to_functions()
-        self._compute_visible_variables()
+        self._compute_visible_identifiers()
 
         code_generation_visitor = CodeGenerationVisitor(self.symbol_table, CodeWriter(output_file), self.tag_generator)
         code_generation_visitor.visit(self.ast.root)
@@ -60,6 +60,7 @@ class CodeGenerator(object):
             var.offset = size_so_far
             size_so_far += var.size
 
+        cls.size_of_just_self = size_so_far
         # Calculate inherited class sizes
         for inherit in cls.inherits:
             inherited_class = global_scope.get_child_by_name(inherit)
@@ -93,14 +94,32 @@ class CodeGenerator(object):
         for func in global_scope.get_functions():
             func.tag = self.tag_generator.tag_for_func()
 
-    def _compute_visible_variables(self):
+    def _compute_visible_identifiers(self):
         global_scope = self.symbol_table.global_scope
+        # Visible variables in classes
         for cls in global_scope.get_classes():
             self._compute_visible_variables_for_class(cls)
+        for cls in global_scope.get_classes():
+            cls.scope.seen_scope = False
+        # Visible functions in classes
+        for cls in global_scope.get_classes():
+            self._compute_visible_functions_for_class(cls)
+        # Visible variables in free functions
         for func in global_scope.get_functions():
             for var in func.scope.get_variables():
                 func.scope.add_visible_variable(var)
-        # TODO class functions
+        # Visible functions in free functions
+        for func in global_scope.get_functions():
+            for func2 in global_scope.get_functions():
+                func.scope.get_visible_function(func2)
+        # Visible variables in class functions
+        for cls in global_scope.get_classes():
+            for func in cls.scope.get_functions():
+                self._compute_visible_variables_for_function(func)
+        # Visible functions in class functions
+        for cls in global_scope.get_classes():
+            for func in cls.scope.get_functions():
+                self._computer_visible_functions_for_function(func)
 
     def _compute_visible_variables_for_class(self, cls):
         global_scope = self.symbol_table.global_scope
@@ -122,6 +141,45 @@ class CodeGenerator(object):
                     new_var.offset = var.offset + current_offset
                     cls.scope.add_visible_variable(new_var)
             current_offset += inherited_class.size
+
+    def _compute_visible_functions_for_class(self, cls):
+        global_scope = self.symbol_table.global_scope
+        cls.scope.seen_scope = True
+        current_offset = 0
+        for func in cls.scope.get_functions():
+            func.offset = 0
+            cls.scope.add_visible_function(func)
+
+        current_offset += cls.size_of_just_self
+        # Go through all inherited classes
+        for inherit in cls.inherits:
+            inherited_class = global_scope.get_child_by_name(inherit)
+            if not inherited_class.scope.seen_scope:
+                self._compute_visible_functions_for_class(inherited_class)
+            # Go through each visible function of the inherited class
+            for func in inherited_class.scope.visible_functions:
+                if func.visibility != Visibility.PRIVATE and not cls.scope.get_visible_function(func):
+                    new_func = copy(func)
+                    new_func.offset = current_offset
+                    cls.scope.add_visible_function(new_func)
+            current_offset += inherited_class.size
+
+    def _compute_visible_variables_for_function(self, func):
+        for var in func.scope.get_variables():
+            func.scope.add_visible_variable(var)
+        for var in func.scope.parent_scope.visible_variables:
+            if not func.scope.get_visible_variable(var.name):
+                new_var = copy(var)
+                new_var.is_namespace_variable = True
+                func.scope.add_visible_variable(new_var)
+
+    def _computer_visible_functions_for_function(self, func):
+        global_scope = self.symbol_table.global_scope
+        for f in func.scope.parent_scope.visible_functions:
+            func.scope.add_visible_function(f)
+        for f in global_scope.get_functions():
+            if not func.scope.get_visible_function(f):
+                func.scope.add_visible_function(f)
 
 
 class TagGenerator(object):

@@ -55,10 +55,6 @@ class CodeGenerationVisitor(object):
         self.visit(node.children[1], scope)
         self.code_writer.operation('addi', 'r13', 'r13', (size_of_type + 4))
         # Do the assignment
-        # TODO delete the next 3 lines
-        # self.code_writer.load_word('r1', -12, 'r13')
-        # self.code_writer.load_word('r2', -8, 'r13')
-        # self.code_writer.store_word(0, 'r2', 'r1')
         self.code_writer.operation('addi', 'r1', 'r13', -(size_of_type + 4))
         self.code_writer.load_word('r2', -(size_of_type + 4), 'r13')
         self.code_writer.operation('addi', 'r3', 'r0', int(size_of_type / 4))
@@ -144,7 +140,6 @@ class CodeGenerationVisitor(object):
             self.code_writer.comment('copy the return value')
             self.code_writer.operation('add', 'r1', 'r12', 'r0')
             self.code_writer.operation('add', 'r2', 'r13', 'r0')
-            # TODO Check if the return size for object is correct
             self.code_writer.operation('addi', 'r3', 'r0', int(size_of_return_type / 4))
             self.code_writer.operation('jl', 'r10', 'copywords')
 
@@ -224,12 +219,36 @@ class CodeGenerationVisitor(object):
     def _handle_function(self, node, scopes):
         item_list_scope, new_scope = scopes
 
+        func = new_scope.get_visible_function(node.identifier)
         self.code_writer.comment(f'Calling function {node.identifier.name}')
-        self.code_writer.operation('subi', 'r13', 'r13', len(important_registers) * 4)
+        self.code_writer.operation('subi', 'r13', 'r13', len(important_registers) * 4 + 4)
         node.children[1].identifier = node.identifier
         self.visit(node.children[1], item_list_scope)
-        self.code_writer.operation('addi', 'r13', 'r13', len(important_registers) * 4)
+        self.code_writer.operation('addi', 'r13', 'r13', len(important_registers) * 4 + 4)
+        # Save the content of r9 on stack
+        self.code_writer.store_word(-4, 'r13', 'r9')
+        self.code_writer.operation('subi', 'r13', 'r13', 4)
+        # Check if the function needs a namespace pointer
+        if func.has_namespace:
+            self.code_writer.comment('Set up the namespace register')
+            # the callee's namespace is the same as the caller's namespace
+            if item_list_scope.identifier == new_scope.identifier:
+                self.code_writer.operation('subi', 'r9', 'r9', func.offset)
+            else:
+                self.code_writer.operation('subi', 'r9', 'r11', func.offset)
+        # Call the function
         self.code_writer.operation('jl', 'r15', node.identifier.tag)
+        # Restore the value of r9
+        self.code_writer.operation('addi', 'r13', 'r13', 4)
+        self.code_writer.load_word('r9', -4, 'r13')
+        # Move the returned value 4 bytes
+        if func.return_type.type != Type.VOID:
+            size_of_return_type = self._size_of_type_no_array(fetch_return_type(func))
+            assert size_of_return_type % 4 == 0
+            self.code_writer.operation('addi', 'r1', 'r13', -4)
+            self.code_writer.operation('add', 'r2', 'r13', 'r0')
+            self.code_writer.operation('addi', 'r3', 'r0', int(size_of_return_type / 4))
+            self.code_writer.operation('jl', 'r10', 'copywords')
         # Move r11 to the returned value's position, which is r13
         self.code_writer.comment('Move r11 to the returned value position')
         self.code_writer.operation('add', 'r11', 'r13', 'r0')
@@ -249,7 +268,11 @@ class CodeGenerationVisitor(object):
             # its value is the address of the variable
             self.code_writer.load_word('r1', -(4 + identifier.offset), 'r14')
         else:
-            self.code_writer.operation('addi', 'r1', 'r11', -identifier.offset)
+            if identifier.is_namespace_variable:
+                # Use namespace register (r9) instead of itemlist register
+                self.code_writer.operation('addi', 'r1', 'r9', -identifier.offset)
+            else:
+                self.code_writer.operation('addi', 'r1', 'r11', -identifier.offset)
         self.code_writer.store_word(-(size_no_array + 4), 'r13', 'r1')
 
         # If variable has indices
