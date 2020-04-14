@@ -1,20 +1,75 @@
-main
-    local
-        integer t[11][11];
-        integer i;
-        integer j;
-    do
-        i = 1;
-        while (i <= 10)
-        do
-            j = 1;
-            while (j <= 10)
-            do
-                t[i][j] = i * j;
-                j = j + 1;
-            end;
-            i = i + 1;
-        end;
+class POLYNOMIAL {
+    public evaluate(integer x) : integer;
+};
 
-        write(t[8][7]);
-    end
+class LINEAR inherits POLYNOMIAL {
+    private integer a;
+    private integer b;
+    
+    public build(integer A, integer B) : LINEAR;
+    public evaluate(integer x) : integer;
+};
+
+class QUADRATIC inherits POLYNOMIAL {
+    private integer a;
+    private integer b;
+    private integer c;
+    
+    public build(integer A, integer B, integer C) : QUADRATIC;
+    public evaluate(integer x) : integer;
+};
+
+POLYNOMIAL::evaluate(integer x) : integer
+  do
+    return (0);
+  end
+
+LINEAR::evaluate(integer x) : integer
+  local
+    integer result;
+  do
+    result = 0;
+    result = a * x + b;
+    return (result);
+  end
+  
+QUADRATIC::evaluate(integer x) : integer
+  local
+    integer result;
+  do    //Using Horner's method
+    result = a;
+    result = result * x + b;
+    result = result * x + c;
+    return (result);
+  end
+  
+LINEAR::build(integer A, integer B) : LINEAR
+  local
+    LINEAR new_function;
+  do
+    new_function.a = A;
+    new_function.b = B;
+    return (new_function);
+  end  
+  
+QUADRATIC::build(integer A, integer B, integer C) : QUADRATIC
+  local
+    QUADRATIC new_function;
+  do
+    new_function.a = A;
+    new_function.b = B;
+    new_function.c = C;
+    return (new_function);
+  end
+
+main
+  local
+    LINEAR f1;
+    QUADRATIC f2;
+  do
+    f1 = f1.build(2, 3);
+    f2 = f2.build(-2, 1, 0);
+
+    write(f1.evaluate(5));
+    write(f2.evaluate(5));
+  end
