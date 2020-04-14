@@ -384,9 +384,10 @@ class CodeGenerationVisitor(object):
     @visitor(NodeType.SIGN_OPERATOR)
     def visit(self, node, scope):
         self.visit(node.children[1], scope)
-        self.code_writer.load_word('r1', -4, 'r13')
-        self.code_writer.operation('muli', 'r1', 'r1', -1)
-        self.code_writer.store_word(-4, 'r13', 'r1')
+        if node.children[0].value == '-':
+            self.code_writer.load_word('r1', -4, 'r13')
+            self.code_writer.operation('muli', 'r1', 'r1', -1)
+            self.code_writer.store_word(-4, 'r13', 'r1')
 
     @visitor(NodeType.STATEMENTS)
     def visit(self, node, scope):
