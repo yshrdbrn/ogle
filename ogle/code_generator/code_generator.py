@@ -111,7 +111,7 @@ class CodeGenerator(object):
         # Visible functions in free functions
         for func in global_scope.get_functions():
             for func2 in global_scope.get_functions():
-                func.scope.get_visible_function(func2)
+                func.scope.add_visible_function(func2)
         # Visible variables in class functions
         for cls in global_scope.get_classes():
             for func in cls.scope.get_functions():

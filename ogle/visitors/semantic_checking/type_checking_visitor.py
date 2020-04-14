@@ -294,7 +294,10 @@ class TypeCheckingVisitor(object):
 
     @visitor(NodeType.READ_STATEMENT)
     def visit(self, node, scope):
-        self.visit(node.children[0], scope)
+        returned_type = self.visit(node.children[0], scope)
+        if returned_type.type == Type.ID:
+            raise TypeCheckingError(node.location, f"Error: Cannot read input of type {returned_type}.")
+        return returned_type
 
     @visitor(NodeType.RETURN_STATEMENT)
     def visit(self, node, scope):

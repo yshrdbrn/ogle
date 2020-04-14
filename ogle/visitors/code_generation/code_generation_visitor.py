@@ -229,7 +229,7 @@ class CodeGenerationVisitor(object):
         self.code_writer.store_word(-4, 'r13', 'r9')
         self.code_writer.operation('subi', 'r13', 'r13', 4)
         # Check if the function needs a namespace pointer
-        if func.has_namespace:
+        if func.has_namespace():
             self.code_writer.comment('Set up the namespace register')
             # the callee's namespace is the same as the caller's namespace
             if item_list_scope.identifier == new_scope.identifier:
@@ -390,10 +390,13 @@ class CodeGenerationVisitor(object):
     @visitor(NodeType.READ_STATEMENT)
     def visit(self, node, scope):
         self.code_writer.empty_line()
+        self.code_writer.comment('Read statement')
         self.visit(node.children[0], scope)
         self.code_writer.operation('jl', 'r15', 'getint')
         self.code_writer.load_word('r2', -8, 'r13')
-        self.code_writer.store_word(0, 'r2', 'r1')
+        # r2 is the address to the end of the variable.
+        # In order to use store_word, we need to pass -4(r2)
+        self.code_writer.store_word(-4, 'r2', 'r1')
 
     @visitor(NodeType.RETURN_STATEMENT)
     def visit(self, node, scope):
