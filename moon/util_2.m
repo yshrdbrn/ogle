@@ -9,17 +9,17 @@
 % inputs:
 %   r1 -> source address
 %   r2 -> destination address
-%   r3 -> number of bytes to copy
+%   r3 -> number of words to copy
 % output:
 %   None
 
-copybytes   align
-copybytes1  cgt     r4, r3, r0
-            bz      r4, copybytes2  % Copying is finished
-            lw      r5, -4(r1)       % Copy the byte
+copywords   align
+copywords1  cgt     r4, r3, r0
+            bz      r4, copywords2  % Copying is finished
+            lw      r5, -4(r1)       % Copy the word
             sw      -4(r2), r5
             subi    r3, r3, 1       % Update r1, r2, r3
             subi    r1, r1, 4
             subi    r2, r2, 4
-            j       copybytes1
-copybytes2  jr      r10
+            j       copywords1
+copywords2  jr      r10

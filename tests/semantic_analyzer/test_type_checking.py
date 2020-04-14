@@ -16,6 +16,9 @@ main
         float y;
         integer z[5];
     do
+        // overflow
+        x = 10000000000000;
+        
         // arithmetic operators
         x = 1.5 + 3;
         x = 1.5 - 3;
@@ -30,7 +33,7 @@ main
         x = 1.5 * 2.0;
         x = func();
     end
-''', 10),
+''', 11),
 
     # function return statement
     ('''
@@ -110,6 +113,9 @@ func() : A
     local
         A a;
     do
+        // object read and arithmetic are not allowed
+        read(a);
+        a = a + a;
         return (a);
     end
 
@@ -129,7 +135,7 @@ main
         // correct call
         y = func().public_func();
     end
-''', 2),
+''', 4),
 ]
 
 @pytest.mark.parametrize("input_file", type_checking_errors)

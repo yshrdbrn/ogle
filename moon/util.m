@@ -81,6 +81,11 @@ putint2	subi	r2,r2,1			% i--
 	lb	r1,putint9(r2)		% Load ch from buffer
 	putc	r1			% Output ch
 	bnz	r2,putint2		% Loop if not finished
+	% put endline
+	addi r1, r0, 13
+	putc    r1
+	addi r1, r0, 10
+	putc    r1
 	jr	r15			% return to the caller
 putint9	res	12			% loacl buffer (12 bytes)
 	align

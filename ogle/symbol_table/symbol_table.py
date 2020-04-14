@@ -8,6 +8,14 @@ class Scope(object):
         self.identifier = identifier
         self.parent_scope = None
 
+        # Variables that are accessible from this scope
+        # They are in the form (variable, offset). This is used in code generation visitor.
+        self.visible_variables = []
+        # Functions that are accessible from this scope
+        self.visible_functions = []
+        # Used to not compute visible_variables twice
+        self.seen_scope = False
+
     def add_child(self, identifier):
         name = identifier.name
         found = self._find_child(name)
@@ -55,6 +63,24 @@ class Scope(object):
 
     def _get_identifier_type(self, identifier_type):
         return [child for child in self.child_identifiers if child.identifier_type == identifier_type]
+
+    def add_visible_variable(self, var):
+        self.visible_variables.append(var)
+
+    def get_visible_variable(self, var_name):
+        for var in self.visible_variables:
+            if var.name == var_name:
+                return var
+        return None
+
+    def add_visible_function(self, func):
+        self.visible_functions.append(func)
+
+    def get_visible_function(self, func):
+        for child in self.visible_functions:
+            if child == func:
+                return child
+        return None
 
 
 @unique
@@ -105,6 +131,7 @@ class Class(Identifier):
         super().__init__(name, IdentifierType.CLASS, location)
         self.inherits = inherits
         self.scope = Scope(self)
+        self.size_of_just_self = None
 
     def __str__(self):
         to_ret = f'class {self.name}'
@@ -191,6 +218,9 @@ class Function(Identifier):
             return self.name == other.name and self.parameters == other.parameters
         return False
 
+    def has_namespace(self):
+        return self.scope.parent_scope.identifier is not None
+
     @classmethod
     def is_overload(cls, func1, func2):
         if isinstance(func1, Function) and isinstance(func2, Function):
@@ -240,6 +270,7 @@ class Variable(Identifier):
         self.type.dimensions = dimensions
         self.visibility = visibility
         self.is_function_parameter = False
+        self.is_namespace_variable = False
 
     def __str__(self):
         to_ret = ''
@@ -255,6 +286,7 @@ class Variable(Identifier):
     def __eq__(self, other):
         if isinstance(other, Variable):
             return self.type == other.type
+        return False
 
 
 class SymbolTable(object):

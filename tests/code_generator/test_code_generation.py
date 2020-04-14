@@ -4,8 +4,10 @@ import subprocess
 from tests.run_compiler import run
 
 input_files = [
+    #
     # Integer arithmetic
     # Read and Write statements
+    #
     {
         'code': '''
 main
@@ -22,10 +24,12 @@ main
         ''',
 
         'input': '12',
-        'output': '30'
+        'output': ['30']
     },
 
+    #
     # If and while statements
+    #
     {
         'code': '''
 main
@@ -52,7 +56,7 @@ main
         ''',
 
         'input': '0',
-        'output': '32'
+        'output': ['32']
     },
 
     #
@@ -83,7 +87,7 @@ main
         ''',
 
         'input': '0',
-        'output': '-6'
+        'output': ['-6']
     },
 
     # Recursive function
@@ -108,7 +112,192 @@ main
         ''',
 
         'input': '0',
-        'output': '120'
+        'output': ['120']
+    },
+
+    #
+    # Arrays
+    #
+    {
+        'code': '''
+func(integer arr[][11]): integer
+    local
+    do
+        // Array is passed by reference
+        arr[1][1] = 10;
+        return(arr[8][9]);
+    end
+
+main
+    local
+        integer t[11][11];
+        integer i;
+        integer j;
+    do
+        i = 1;
+        while (i <= 10)
+        do
+            j = 1;
+            while (j <= 10)
+            do
+                t[i][j] = i * j;
+                j = j + 1;
+            end;
+            i = i + 1;
+        end;
+
+        write(func(t) + t[1][1]);
+    end
+        ''',
+
+        'input': '0',
+        'output': ['82']
+    },
+
+    #
+    # Classes
+    #
+
+    # Object variables
+    {
+        'code': '''
+class A {
+    public integer x;
+    public integer y;
+};
+
+main
+    local
+        A a;
+        A objectArray[10][10];
+    do
+        a.x = 20;
+        objectArray[3][4].y = 7;
+        write(a.x + objectArray[3][4].y);
+    end
+        ''',
+
+        'input': '0',
+        'output': ['27']
+    },
+
+    # Object functions
+    {
+        'code': '''
+class A {
+    private integer x;
+    private integer y;
+    
+    public init(integer X, integer Y): void;
+    public sum(): integer;
+};
+
+A::init(integer X, integer Y): void
+    do
+        x = X;
+        y = Y;
+    end
+
+A::sum(): integer
+    do
+        return (x + y);
+    end
+
+main
+    local
+        A a;
+    do
+        a.init(100, 20);
+        write(a.sum());
+    end
+        ''',
+
+        'input': '0',
+        'output': ['120']
+    },
+
+    # Inheritance
+    {
+        'code': '''
+class POLYNOMIAL {
+    public evaluate(integer x) : integer;
+};
+
+class LINEAR inherits POLYNOMIAL {
+    private integer a;
+    private integer b;
+    
+    public build(integer A, integer B) : LINEAR;
+    public evaluate(integer x) : integer;
+};
+
+class QUADRATIC inherits POLYNOMIAL {
+    private integer a;
+    private integer b;
+    private integer c;
+    
+    public build(integer A, integer B, integer C) : QUADRATIC;
+    public evaluate(integer x) : integer;
+};
+
+POLYNOMIAL::evaluate(integer x) : integer
+  do
+    return (0);
+  end
+
+LINEAR::evaluate(integer x) : integer
+  local
+    integer result;
+  do
+    result = 0;
+    result = a * x + b;
+    return (result);
+  end
+  
+QUADRATIC::evaluate(integer x) : integer
+  local
+    integer result;
+  do    //Using Horner's method
+    result = a;
+    result = result * x + b;
+    result = result * x + c;
+    return (result);
+  end
+  
+LINEAR::build(integer A, integer B) : LINEAR
+  local
+    LINEAR new_function;
+  do
+    new_function.a = A;
+    new_function.b = B;
+    return (new_function);
+  end  
+  
+QUADRATIC::build(integer A, integer B, integer C) : QUADRATIC
+  local
+    QUADRATIC new_function;
+  do
+    new_function.a = A;
+    new_function.b = B;
+    new_function.c = C;
+    return (new_function);
+  end
+  
+main
+  local
+    LINEAR f1;
+    QUADRATIC f2;
+  do
+    f1 = f1.build(2, 3);
+    f2 = f2.build(-2, 1, 0);
+
+    write(f1.evaluate(5));
+    write(f2.evaluate(5));
+  end
+        ''',
+
+        'input': '0',
+        'output': ['13', '-45']
     }
 ]
 
@@ -131,4 +320,4 @@ def test_sample(directory_with_moon, input_file):
                          capture_output=True,
                          input=bytes(input_file['input'], 'utf-8'))\
         .stdout.decode("utf-8")
-    assert out.splitlines()[3] == input_file['output']
+    assert out.splitlines()[3:-2] == input_file['output']
