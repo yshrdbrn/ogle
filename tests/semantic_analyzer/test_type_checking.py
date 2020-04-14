@@ -16,6 +16,9 @@ main
         float y;
         integer z[5];
     do
+        // overflow
+        x = 10000000000000;
+        
         // arithmetic operators
         x = 1.5 + 3;
         x = 1.5 - 3;
@@ -30,7 +33,7 @@ main
         x = 1.5 * 2.0;
         x = func();
     end
-''', 10),
+''', 11),
 
     # function return statement
     ('''

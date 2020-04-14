@@ -1,10 +1,11 @@
+from struct import pack, error
 from ogle.ast.ast_node import NodeType
 from ogle.symbol_table.symbol_table import *
 from ogle.visitors.semantic_checking.symbol_table_visitor import SymbolTableVisitor
 from ogle.visitors.visitor import visitor
 
 
-def _fetch_return_type(identifier):
+def fetch_return_type(identifier):
     if isinstance(identifier, Function):
         return identifier.return_type
     else:
@@ -129,6 +130,11 @@ class TypeCheckingVisitor(object):
 
     @visitor(NodeType.INT_NUM)
     def visit(self, node, scope):
+        # Check if number fits in 4 bytes
+        try:
+            pack("i", int(node.value))
+        except error:
+            raise TypeCheckingError(node.location, f"Error: Number does not fit in 4 bytes.")
         return TypeValue(Type.INTEGER)
 
     @visitor(NodeType.ITEM)
@@ -195,7 +201,7 @@ class TypeCheckingVisitor(object):
         # Search in function scope
         try:
             node.identifier = _find_in_scope(identifier, scope)
-            return _fetch_return_type(node.identifier)
+            return fetch_return_type(node.identifier)
         except (IdentifierNotFoundError, FunctionNotFoundError):
             pass
 
@@ -214,7 +220,7 @@ class TypeCheckingVisitor(object):
         # Search in global scope
         # Might raise IdentifierNotFoundError
         node.identifier = _find_in_scope(identifier, scope)
-        return _fetch_return_type(node.identifier)
+        return fetch_return_type(node.identifier)
 
     def _type_of_identifier_in_class(self, identifier, class_name, node):
         cls = self.symbol_table.global_scope.get_child_by_name(class_name)
@@ -225,7 +231,7 @@ class TypeCheckingVisitor(object):
             if child.visibility == Visibility.PUBLIC or self._access_to_private_variable:
                 self._access_to_private_variable = False
                 node.identifier = child
-                return _fetch_return_type(child)
+                return fetch_return_type(child)
         except (IdentifierNotFoundError, FunctionNotFoundError):
             pass
 
@@ -272,7 +278,10 @@ class TypeCheckingVisitor(object):
 
     @visitor(NodeType.NOT_OPERATOR)
     def visit(self, node, scope):
-        return self.visit(node.children[0], scope)
+        returned_type = self.visit(node.children[1], scope)
+        if returned_type.type == Type.ID:
+            raise TypeCheckingError(node.location, f"Error: Arithmetic operation on class type {returned_type}")
+        return returned_type
 
     @visitor(NodeType.PROGRAM)
     def visit(self, node, scope):
@@ -304,7 +313,10 @@ class TypeCheckingVisitor(object):
 
     @visitor(NodeType.SIGN_OPERATOR)
     def visit(self, node, scope):
-        return self.visit(node.children[1], scope)
+        returned_type = self.visit(node.children[1], scope)
+        if returned_type.type == Type.ID:
+            raise TypeCheckingError(node.location, f"Error: Arithmetic operation on class type {returned_type}")
+        return returned_type
 
     @visitor(NodeType.STATEMENTS)
     def visit(self, node, scope):

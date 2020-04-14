@@ -1,11 +1,13 @@
 from struct import pack, error
 from ogle.ast.ast_node import NodeType
 from ogle.symbol_table.symbol_table import *
+from ogle.visitors.semantic_checking.type_checking_visitor import fetch_return_type
 from ogle.visitors.visitor import visitor
 
 
 # Registers to save in stack when calling a subroutine
-important_registers = ['r15', 'r14', 'r13']
+# * r13 should always be at the end of the list *
+important_registers = ['r15', 'r14', 'r11', 'r13']
 
 
 class CodeGenerationVisitor(object):
@@ -46,14 +48,21 @@ class CodeGenerationVisitor(object):
     @visitor(NodeType.ASSIGN_STATEMENT)
     def visit(self, node, scope):
         self.code_writer.comment('Assign statement')
-        self.visit(node.children[0], scope)
-        self.code_writer.operation('addi', 'r13', 'r13', -8)
+        return_type = self.visit(node.children[0], scope)
+        size_of_type = self._size_of_type_no_array(return_type)
+        assert size_of_type % 4 == 0
+        self.code_writer.operation('addi', 'r13', 'r13', -(size_of_type + 4))
         self.visit(node.children[1], scope)
-        self.code_writer.operation('addi', 'r13', 'r13', 8)
+        self.code_writer.operation('addi', 'r13', 'r13', (size_of_type + 4))
         # Do the assignment
-        self.code_writer.load_word('r1', -12, 'r13')
-        self.code_writer.load_word('r2', -8, 'r13')
-        self.code_writer.store_word(0, 'r2', 'r1')
+        # TODO delete the next 3 lines
+        # self.code_writer.load_word('r1', -12, 'r13')
+        # self.code_writer.load_word('r2', -8, 'r13')
+        # self.code_writer.store_word(0, 'r2', 'r1')
+        self.code_writer.operation('addi', 'r1', 'r13', -(size_of_type + 4))
+        self.code_writer.load_word('r2', -(size_of_type + 4), 'r13')
+        self.code_writer.operation('addi', 'r3', 'r0', int(size_of_type / 4))
+        self.code_writer.operation('jl', 'r10', 'copywords')
 
     @visitor(NodeType.COMPARE_OPERATOR)
     def visit(self, node, scope):
@@ -91,13 +100,17 @@ class CodeGenerationVisitor(object):
         self.code_writer.comment('writing function parameters')
         for index, child in enumerate(node.children):
             self.visit(child, scope)
+            size_no_array = self._size_of_type_no_array(params[index].type)
             # If parameter was array type
             if params[index].type.dimensions:
                 # Replace the address with the value
-                self.code_writer.load_word('r1', -8, 'r13')
+                self.code_writer.load_word('r1', -(size_no_array + 4), 'r13')
                 self.code_writer.store_word(-4, 'r13', 'r1')
-            self.code_writer.operation('subi', 'r13', 'r13', 4)
-            number_of_bytes_moved += 4
+                self.code_writer.operation('subi', 'r13', 'r13', 4)
+                number_of_bytes_moved += 4
+            else:
+                self.code_writer.operation('subi', 'r13', 'r13', size_no_array)
+                number_of_bytes_moved += size_no_array
         self.code_writer.operation('addi', 'r13', 'r13', number_of_bytes_moved)
 
     @visitor(NodeType.FUNCTION_DEFINITION)
@@ -125,13 +138,15 @@ class CodeGenerationVisitor(object):
         for index, register in enumerate(important_registers):
             self.code_writer.load_word(register, -4 * (index + 1), 'r13')
         if func_identifier.return_type.type != Type.VOID:
+            size_of_return_type = self._size_of_type_no_array(fetch_return_type(func_identifier))
+            assert size_of_return_type % 4 == 0
             # Copy the return value to r13 address
             self.code_writer.comment('copy the return value')
             self.code_writer.operation('add', 'r1', 'r12', 'r0')
             self.code_writer.operation('add', 'r2', 'r13', 'r0')
-            # TODO Change the size from 1 to the returned object size
-            self.code_writer.operation('addi', 'r3', 'r0', 1)
-            self.code_writer.operation('jl', 'r10', 'copybytes')
+            # TODO Check if the return size for object is correct
+            self.code_writer.operation('addi', 'r3', 'r0', int(size_of_return_type / 4))
+            self.code_writer.operation('jl', 'r10', 'copywords')
 
         self.code_writer.operation('jr', 'r15')
 
@@ -159,16 +174,16 @@ class CodeGenerationVisitor(object):
     @visitor(NodeType.INDICES)
     def visit(self, node, scope):
         identifier = node.identifier
+        size_no_array = self._size_of_type_no_array(fetch_return_type(identifier))
 
-        dims = [0 for i in range(len(identifier.type.dimensions))]
+        dims = [0 for _ in range(len(identifier.type.dimensions))]
         for i in range(1, len(identifier.type.dimensions)):
             dims[i] = int(identifier.type.dimensions[i])
 
-        self.code_writer.operation('subi', 'r13', 'r13', 8)
+        self.code_writer.operation('subi', 'r13', 'r13', (size_no_array + 4))
         for index, child in enumerate(node.children):
             self.visit(child, scope)
             self.code_writer.comment(f'calculating variable address after index {index}')
-            # TODO objects: move forward number number of size instead of 4
             if index != len(dims) - 1:
                 sub_array_size = sum(dims[index+1:])
                 self.code_writer.operation('addi', 'r1', 'r0', sub_array_size)
@@ -176,17 +191,15 @@ class CodeGenerationVisitor(object):
                 self.code_writer.operation('mul', 'r1', 'r1', 'r2')
             else:  # index == len(dims) -1
                 self.code_writer.load_word('r1', -4, 'r13')
-            self.code_writer.operation('muli', 'r1', 'r1', 4)
+            self.code_writer.operation('muli', 'r1', 'r1', size_no_array)
             self.code_writer.load_word('r3', 0, 'r13')
-            self.code_writer.operation('add', 'r3', 'r3', 'r1')
+            self.code_writer.operation('sub', 'r3', 'r3', 'r1')
             self.code_writer.store_word(0, 'r13', 'r3')
-        self.code_writer.operation('addi', 'r13', 'r13', 8)
+        self.code_writer.operation('addi', 'r13', 'r13', (size_no_array + 4))
 
     @visitor(NodeType.INT_NUM)
     def visit(self, node, scope):
         val = int(node.value)
-        # Check if it fits into 4 bytes. Throws exception if not
-        pack("i", val)
         self.code_writer.comment(f'Load immediate number {val} in stack')
         try:
             # Check if fits in 2 bytes
@@ -200,50 +213,104 @@ class CodeGenerationVisitor(object):
         self.code_writer.store_word(-4, 'r13', 'r1')
 
     @visitor(NodeType.ITEM)
-    def visit(self, node, scope):
+    def visit(self, node, scopes):
         assert node.identifier
         identifier = node.identifier
         if isinstance(identifier, Function):
-            self._handle_function(node, scope)
+            return self._handle_function(node, scopes)
         else:
-            self._handle_variable(node, scope)
+            return self._handle_variable(node, scopes)
 
-    def _handle_function(self, node, scope):
+    def _handle_function(self, node, scopes):
+        item_list_scope, new_scope = scopes
+
         self.code_writer.comment(f'Calling function {node.identifier.name}')
         self.code_writer.operation('subi', 'r13', 'r13', len(important_registers) * 4)
         node.children[1].identifier = node.identifier
-        self.visit(node.children[1], scope)
+        self.visit(node.children[1], item_list_scope)
         self.code_writer.operation('addi', 'r13', 'r13', len(important_registers) * 4)
         self.code_writer.operation('jl', 'r15', node.identifier.tag)
+        # Move r11 to the returned value's position, which is r13
+        self.code_writer.comment('Move r11 to the returned value position')
+        self.code_writer.operation('add', 'r11', 'r13', 'r0')
 
-    def _handle_variable(self, node, scope):
-        identifier = node.identifier
+        return node.identifier.return_type
+
+    def _handle_variable(self, node, scopes):
+        item_list_scope, new_scope = scopes
+
+        identifier = new_scope.get_visible_variable(node.identifier.name)
+        size_no_array = self._size_of_type_no_array(fetch_return_type(identifier))
+
         self.code_writer.comment(f'variable {identifier.name}')
         # Store the variable address in stack
         if identifier.is_function_parameter and identifier.type.dimensions:
             # If the variable is a function parameter and an array type,
             # its value is the address of the variable
-            self.code_writer.load_word('r1', -(identifier.size + identifier.offset), 'r14')
+            self.code_writer.load_word('r1', -(4 + identifier.offset), 'r14')
         else:
-            self.code_writer.operation('addi', 'r1', 'r14', -(identifier.size + identifier.offset))
-        self.code_writer.store_word(-8, 'r13', 'r1')
+            self.code_writer.operation('addi', 'r1', 'r11', -identifier.offset)
+        self.code_writer.store_word(-(size_no_array + 4), 'r13', 'r1')
 
         # If variable has indices
         if len(node.children) == 2:
             # Check the indices
             indices_node = node.children[1]
             indices_node.identifier = identifier
-            self.visit(indices_node, scope)
+            self.visit(indices_node, item_list_scope)
 
         # Store the value of the variable
-        self.code_writer.load_word('r1', -8, 'r13')
-        self.code_writer.load_word('r2', 0, 'r1')
-        self.code_writer.store_word(-4, 'r13', 'r2')
+
+        # Set up inputs for copywords
+        self.code_writer.load_word('r1', -(size_no_array + 4), 'r13')
+        self.code_writer.operation('add', 'r2', 'r13', 'r0')
+        assert size_no_array % 4 == 0
+        self.code_writer.operation('addi', 'r3', 'r0', int(size_no_array / 4))
+        self.code_writer.operation('jl', 'r10', 'copywords')
+
+        # Move r11 to the variable's position
+        self.code_writer.load_word('r11', -(size_no_array + 4), 'r13')
+
+        return identifier.type
+
+    def _size_of_type_no_array(self, _type):
+        global_scope = self.symbol_table.global_scope
+        if _type.type != Type.ID:
+            return 4
+        else:
+            class_id = global_scope.get_child_by_name(_type.value)
+            return class_id.size
 
     @visitor(NodeType.ITEM_LIST)
     def visit(self, node, scope):
-        assert len(node.children) == 1
-        self.visit(node.children[0], scope)
+        # r11 -> dot operator object pointer
+        # Save the current value of r11
+        self.code_writer.store_word(-4, 'r13', 'r11')
+        self.code_writer.operation('subi', 'r13', 'r13', 4)
+        # Set r11 to current scope's stack pointer (r14)
+        self.code_writer.operation('add', 'r11', 'r14', 'r0')
+        last_return_type = None
+        for child in node.children:
+            new_scope = self._get_scope_for_item(last_return_type, scope)
+            last_return_type = self.visit(child, (scope, new_scope))
+        # restore r11
+        return_type_size = self._size_of_type_no_array(last_return_type)
+        assert return_type_size % 4 == 0
+        self.code_writer.load_word('r11', 0, 'r13')
+        self.code_writer.operation('addi', 'r13', 'r13', 4)
+        # Move the returned value (its value + address) 4 bytes
+        self.code_writer.operation('addi', 'r1', 'r13', -4)
+        self.code_writer.operation('add', 'r2', 'r13', 'r0')
+        self.code_writer.operation('addi', 'r3', 'r0', int((return_type_size / 4) + 1))
+        self.code_writer.operation('jl', 'r10', 'copywords')
+
+        return last_return_type
+
+    def _get_scope_for_item(self, last_return_type, scope):
+        if not last_return_type:
+            return scope
+        class_id = self.symbol_table.global_scope.get_child_by_name(last_return_type.value)
+        return class_id.scope
 
     @visitor(NodeType.MAIN)
     def visit(self, node, scope):
@@ -281,7 +348,7 @@ class CodeGenerationVisitor(object):
 
     @visitor(NodeType.NOT_OPERATOR)
     def visit(self, node, scope):
-        self.code_writer.comment('mult operator')
+        self.code_writer.comment('not operator')
         self.visit(node.children[1], scope)
         self.code_writer.load_word('r1', -4, 'r13')
         self.code_writer.operation('cgt', 'r1', 'r1', 'r0')

@@ -8,6 +8,14 @@ class Scope(object):
         self.identifier = identifier
         self.parent_scope = None
 
+        # Variables that are accessible from this scope
+        # They are in the form (variable, offset). This is used in code generation visitor.
+        self.visible_variables = []
+        # Functions that are accessible from this scope
+        self.visible_functions = []
+        # Used to not compute visible_variables twice
+        self.seen_scope = False
+
     def add_child(self, identifier):
         name = identifier.name
         found = self._find_child(name)
@@ -56,6 +64,14 @@ class Scope(object):
     def _get_identifier_type(self, identifier_type):
         return [child for child in self.child_identifiers if child.identifier_type == identifier_type]
 
+    def add_visible_variable(self, var):
+        self.visible_variables.append(var)
+
+    def get_visible_variable(self, var_name):
+        for var in self.visible_variables:
+            if var.name == var_name:
+                return var
+        return None
 
 @unique
 class Type(Enum):
@@ -255,6 +271,7 @@ class Variable(Identifier):
     def __eq__(self, other):
         if isinstance(other, Variable):
             return self.type == other.type
+        return False
 
 
 class SymbolTable(object):

@@ -1,17 +1,20 @@
+from copy import copy
 from ogle.code_generator.code_writer import CodeWriter
-from ogle.symbol_table.symbol_table import Type
+from ogle.symbol_table.symbol_table import Type, Visibility
 from ogle.visitors.code_generation.code_generation_visitor import CodeGenerationVisitor
 
 
-def get_variable_size(var):
-    # TODO Define the variable size based on the object size
+def update_variable_size_based_on_dimensions(var):
     var_type = var.type
     no_of_variables = 1
     if not var.is_function_parameter:
         for dim in var_type.dimensions:
             if dim:
                 no_of_variables *= int(dim)
-    return no_of_variables * 4
+        var.size = no_of_variables * var.size
+    else:
+        if var_type.dimensions:
+            var.size = 4
 
 
 class CodeGenerator(object):
@@ -24,6 +27,7 @@ class CodeGenerator(object):
         # Pre-calculation
         self._calculate_identifier_sizes()
         self._give_tags_to_functions()
+        self._compute_visible_variables()
 
         code_generation_visitor = CodeGenerationVisitor(self.symbol_table, CodeWriter(output_file), self.tag_generator)
         code_generation_visitor.visit(self.ast.root)
@@ -45,13 +49,14 @@ class CodeGenerator(object):
         # Calculate all variable sizes
         for var in cls.scope.get_variables():
             if var.type.type != Type.ID:
-                var.size = get_variable_size(var)
+                var.size = 4
             else:
                 class_id = global_scope.get_child_by_name(var.type.value)
                 if not class_id.size:
                     self._calculate_class_size(class_id)
                 var.size = class_id.size
 
+            update_variable_size_based_on_dimensions(var)
             var.offset = size_so_far
             size_so_far += var.size
 
@@ -69,11 +74,12 @@ class CodeGenerator(object):
         size_so_far = 0
         for var in func.scope.get_variables():
             if var.type.type != Type.ID:
-                var.size = get_variable_size(var)
+                var.size = 4
             else:
                 class_id = global_scope.get_child_by_name(var.type.value)
                 var.size = class_id.size
 
+            update_variable_size_based_on_dimensions(var)
             var.offset = size_so_far
             size_so_far += var.size
 
@@ -86,6 +92,36 @@ class CodeGenerator(object):
                 func.tag = self.tag_generator.tag_for_func()
         for func in global_scope.get_functions():
             func.tag = self.tag_generator.tag_for_func()
+
+    def _compute_visible_variables(self):
+        global_scope = self.symbol_table.global_scope
+        for cls in global_scope.get_classes():
+            self._compute_visible_variables_for_class(cls)
+        for func in global_scope.get_functions():
+            for var in func.scope.get_variables():
+                func.scope.add_visible_variable(var)
+        # TODO class functions
+
+    def _compute_visible_variables_for_class(self, cls):
+        global_scope = self.symbol_table.global_scope
+        cls.scope.seen_scope = True
+        current_offset = 0
+        for var in cls.scope.get_variables():
+            cls.scope.add_visible_variable(var)
+            current_offset += var.size
+
+        # Go through all inherited classes
+        for inherit in cls.inherits:
+            inherited_class = global_scope.get_child_by_name(inherit)
+            if not inherited_class.scope.seen_scope:
+                self._compute_visible_variables_for_class(inherited_class)
+            # Go through each visible variable of the inherited class
+            for var in inherited_class.scope.visible_variables:
+                if var.visibility != Visibility.PRIVATE and not cls.scope.get_visible_variable(var.name):
+                    new_var = copy(var)
+                    new_var.offset = var.offset + current_offset
+                    cls.scope.add_visible_variable(new_var)
+            current_offset += inherited_class.size
 
 
 class TagGenerator(object):
