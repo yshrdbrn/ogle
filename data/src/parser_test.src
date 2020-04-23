@@ -1,0 +1,6 @@
+main
+    local
+        integer arr[7];
+    do
+        arr[1] = 2 + * 6 + test_func().something[5];
+    end
