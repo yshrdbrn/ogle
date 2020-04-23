@@ -19,7 +19,7 @@ The output `.m` file will be generated in the same directory as the input file (
 
 To run the assembly code, you need to compile MOON processor simulator and give the `.m` file to the executable:
 ```shell script
-$ cd moon
+$ cd moon/
 $ gcc moon.c -o moon.out
 $ ./moon.out <path_to_dot_m_file> util.m util_2.m
 ```
